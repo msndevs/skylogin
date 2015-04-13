@@ -1,7 +1,6 @@
 CC    = gcc
-CFLAGS       = -I ../include/
-DEBUGFLAGS   = -O0 -D _DEBUG -DDEBUG
-RELEASEFLAGS = -O3 -D NDEBUG -combine -fwhole-program
+CFLAGS       = -I ../include/ -O3 -D NDEBUG
+DEBUGFLAGS   = -I ../include/ -O0 -D _DEBUG -DDEBUG -g
 
 TARGET  = test
 SOURCES = test.c
@@ -11,10 +10,12 @@ OBJECTS = $(SOURCES:.c=.o)
 all: $(TARGET)
 
 $(TARGET): $(OBJECTS)
-	$(CC) $(CFLAGS) $(LDFLAGS) $(RELEASEFLAGS) -o $(TARGET) $(OBJECTS)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $(TARGET) $(OBJECTS)
 
-debug: $(OBJECTS)
-	$(CC) $(CFLAGS) $(LDFLAGS) $(DEBUGFLAGS) -o $(TARGET) $(OBJECTS)
+debug: CFLAGS := $(DEBUGFLAGS)
+debug: $(TARGET)
 
 clean:
 	rm -f $(TARGET) *.o
+
+.PHONY: all debug clean

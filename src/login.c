@@ -93,7 +93,7 @@ static int SendAuthentificationBlobLS(Skype_Inst *pInst, SOCKET LSSock, char *Us
 	memcpy(HSHeader->MAGIC, HTTPS_HSR_MAGIC, sizeof(HSHeader->MAGIC));
 	HSHeader->ResponseLen = htons(0xCD);
 	Browser += sizeof(HttpsPacketHeader);
-	
+
 	*Browser++ = RAW_PARAMS;
 	*Browser++ = 0x03;
 
@@ -107,7 +107,7 @@ static int SendAuthentificationBlobLS(Skype_Inst *pInst, SOCKET LSSock, char *Us
 
 	SkypeRSA = RSA_new();
 	BN_hex2bn(&(SkypeRSA->n), SkypeModulus1536[1]);
-    BN_hex2bn(&(SkypeRSA->e), "10001");
+	BN_hex2bn(&(SkypeRSA->e), "10001");
 	RSA_public_encrypt(SK_SZ, pInst->SessionKey, pInst->SessionKey, SkypeRSA, RSA_NO_PADDING);
 	RSA_free(SkypeRSA);
 
@@ -214,7 +214,6 @@ static int SendAuthentificationBlobLS(Skype_Inst *pInst, SOCKET LSSock, char *Us
 
 	Size = (uint)(Browser - AuthBlob);
 
-	
 	if (send(LSSock, (const char *)AuthBlob, Size, 0)<=0)
 	{
 		DBGPRINT("Sending to LS failed :'(..\n");
@@ -239,7 +238,7 @@ static int SendAuthentificationBlobLS(Skype_Inst *pInst, SOCKET LSSock, char *Us
 		ivec[3] = 0x01;
 		ivec[7] = 0x01;
 		AES_ctr128_encrypt(RecvBuf, RecvBuf, BSize, &AesKey, ivec, ecount_buf, &Idx);
-	
+
 		Browser = RecvBuf;
 		ManageObjects(&Browser, BSize, &Response);
 		for (Idx = 0; Idx < Response.NbObj; Idx++)
@@ -272,7 +271,7 @@ static int SendAuthentificationBlobLS(Skype_Inst *pInst, SOCKET LSSock, char *Us
 
 
 int PerformLogin(Skype_Inst *pInst, char *User, char *Pass)
-{ 
+{
 	uint			ReUse = 1;
 	int				i;
 	SOCKET			LSSock;
@@ -290,7 +289,7 @@ int PerformLogin(Skype_Inst *pInst, char *User, char *Pass)
 		}
 		closesocket(LSSock);
 	}
-	
+
 	if (!iRet) DBGPRINT("Login Failed..\n");
 	return iRet;
 }

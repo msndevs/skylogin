@@ -200,7 +200,7 @@ void FillMiscDatas(Skype_Inst *pInst, unsigned int *Datas)
 void FillRndBuffer(unsigned char *Buffer)
 {
 	int fd = open("/dev/urandom", 0);
-	
+
 	if (fd!=-1)
 	{
 		read(fd, Buffer, 0x464);

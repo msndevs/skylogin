@@ -100,7 +100,7 @@ void		BuildUnFinalizedDatas(uchar *Datas, uint Size, uchar *Result)
 	uint			Idx;
 	SHA_CTX			MDCtx;
 
-	Result[0x00] = 0x4B;	
+	Result[0x00] = 0x4B;
 	for (Idx = 1; Idx < (0x80 - (Size + SHA_DIGEST_LENGTH) - 2); Idx++)
 		Result[Idx] = 0xBB;
 	Result[Idx++] = 0xBA;
@@ -114,7 +114,7 @@ void		BuildUnFinalizedDatas(uchar *Datas, uint Size, uchar *Result)
 	SHA1_Update(&MDCtx, Mark, Size);
 	SHA1_Final(Result + Idx, &MDCtx);
 	Idx += SHA_DIGEST_LENGTH;
-	
+
 	Result[Idx] = 0xBC;
 }
 

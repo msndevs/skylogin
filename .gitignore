@@ -1,0 +1,4 @@
+*.o
+*.so
+fakeskype.nodid
+test/test

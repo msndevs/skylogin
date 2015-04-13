@@ -12,7 +12,7 @@
  *
  */
 #ifdef WIN32
-#define EXPORT __declspec(dllexport) 
+#define EXPORT __declspec(dllexport)
 #endif
 #include "common.h"
 #include "login.h"
@@ -27,7 +27,7 @@ EXPORT SkyLogin *SkyLogin_Init()
 #ifdef WIN32
 	WORD wVersionRequested;
 	WSADATA wsaData;
-	
+
 	wVersionRequested = MAKEWORD( 2, 2 );
 	WSAStartup( wVersionRequested, &wsaData);
 #endif

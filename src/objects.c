@@ -22,9 +22,9 @@
 void	WriteValue(uchar **BufferAddr, uint Value)
 {
 	uint		a;
-	
+
 	for (a = Value; a > 0x7F; a >>= 7, (*BufferAddr)++) **BufferAddr = (uchar)a | 0x80;
-    **BufferAddr = (uchar) a;
+	**BufferAddr = (uchar) a;
 	(*BufferAddr)++;
 }
 

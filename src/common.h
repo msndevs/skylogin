@@ -1,11 +1,15 @@
 #ifndef __COMMON_H__
 #define __COMMON_H__
+
 #ifdef WIN32
+
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <winsock.h>
 #pragma comment (lib,"ws2_32.lib")
+
 #else
+
 #include <sys/socket.h>
 #include <netinet/ip.h>
 #include <arpa/inet.h>
@@ -16,7 +20,9 @@ typedef int SOCKET;
 typedef int BOOL;
 #define TRUE  1
 #define FALSE 0
+
 #endif
+
 #ifdef DEBUG
 #include <stdio.h>
 #define DBGPRINT printf
