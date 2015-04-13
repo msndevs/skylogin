@@ -17,7 +17,7 @@
 #include "platform.h"
 #include "crc.h"
 
-Host	LoginServers[] = {
+static Host LoginServers[] = {
 	/*
 	{"213.166.51.4", 33033},
 	{"193.88.6.13", 33033},
@@ -266,7 +266,7 @@ static int SendAuthentificationBlobLS(Skype_Inst *pInst, SOCKET LSSock, char *Us
 	}
 
 
-	return (-1);
+	return 0;
 }
 
 
