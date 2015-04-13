@@ -57,7 +57,7 @@ static BOOL QueryRegValue(HKEY hKey, LPCTSTR lpSubKey, LPBYTE lpValue, LPDWORD p
 	return ret == ERROR_SUCCESS;
 }
 
-__int64 PlatFormSpecific()
+int64_t PlatFormSpecific()
 {
 	BYTE		Buffer[0x400];
 	DWORD		BufSz = 0x400;
@@ -87,7 +87,7 @@ void	 InitNodeId(Skype_Inst *pInst)
 	if (QueryRegValue(HKEY_LOCAL_MACHINE, 
 		"SOFTWARE\\FakeSkype\\NodeId",
 		(LPBYTE)&pInst->NodeID, &BufSz)) return;
-	*(__int64*)&pInst->NodeID = BytesRandomI64();
+	*(int64_t *)&pInst->NodeID = BytesRandomI64();
 	if (RegCreateKey(HKEY_LOCAL_MACHINE, "SOFTWARE\\FakeSkype", &hKey) == ERROR_SUCCESS)
 	{
 		RegSetValueEx(hKey, "NodeId", 0, REG_BINARY, (LPBYTE)&pInst->NodeID, sizeof(pInst->NodeID));
@@ -140,7 +140,7 @@ void FillMiscDatas(Skype_Inst *pInst, unsigned int *Datas)
 	BYTE		Buffer[0x400];
 	DWORD		BufSz = 0x400;
 	int			ret;
-	__int64 PlatForm;
+	int64_t PlatForm;
 
 	PlatForm = PlatFormSpecific();
 	Datas[0] = *(unsigned int *)&PlatForm;

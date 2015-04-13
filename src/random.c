@@ -29,7 +29,7 @@ unsigned int	BytesSHA1(uchar *Data, uint Length)
 	return *(unsigned int *)Buffer;
 }
 
-__int64 BytesSHA1I64(uchar *Data, uint Length)
+int64_t BytesSHA1I64(uchar *Data, uint Length)
 {
 	uchar		Buffer[SHA_DIGEST_LENGTH];
 	SHA_CTX		Context;
@@ -37,7 +37,7 @@ __int64 BytesSHA1I64(uchar *Data, uint Length)
 	SHA1_Init(&Context);
 	SHA1_Update(&Context, Data, Length);
 	SHA1_Final(Buffer, &Context);
-	return *(__int64 *)Buffer;
+	return *(int64_t *)Buffer;
 }
 
 unsigned int	BytesRandom()
@@ -48,7 +48,7 @@ unsigned int	BytesRandom()
 	return BytesSHA1(Buffer, 0x464);
 }
 
-__int64 BytesRandomI64()
+int64_t BytesRandomI64()
 {
 	uchar		Buffer[0x464];
 

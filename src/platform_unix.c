@@ -69,7 +69,7 @@ static int getMACAddr(unsigned char *pResult)
 	return 0;
 }
 
-__int64 PlatFormSpecific()
+int64_t PlatFormSpecific()
 {
 	unsigned char	mac_addr[6];
 
@@ -96,21 +96,21 @@ __int64 PlatFormSpecific()
 			}
 		}
 		SHA1_Final(Buffer, &Context);
-		return *(__int64 *)Buffer;
+		return *(int64_t *)Buffer;
 	}
 }
 
 void	 InitNodeId(Skype_Inst *pInst)
 {
 	FILE *fp;
-	__int64 NodeID;
+	int64_t NodeID;
 	int ok=0;
 
-	*(__int64*)&pInst->NodeID = BytesRandomI64();
+	*(int64_t *)&pInst->NodeID = BytesRandomI64();
 	if (fp=fopen("fakeskype.nodid", "rb"))
 	{
 		if ((ok = fread(&NodeID, sizeof(NodeID), 1, fp)) == 1)
-			*(__int64*)pInst->NodeID = NodeID;
+			*(int64_t*)pInst->NodeID = NodeID;
 		fclose(fp);
 	}
 	if (!ok)

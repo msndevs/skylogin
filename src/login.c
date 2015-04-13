@@ -55,7 +55,7 @@ static BOOL SendHandShake2LS(SOCKET LSSock, Host *CurLS)
 
 static int SendAuthentificationBlobLS(Skype_Inst *pInst, SOCKET LSSock, char *User, char *Pass)
 {
-	__int64				PlatForm;
+	int64_t				PlatForm;
 	uchar				AuthBlob[0xFFFF] = {0};
 	uchar				MD5Result[MD5_DIGEST_LENGTH] = {0};
 	uchar				SHAResult[32] = {0};

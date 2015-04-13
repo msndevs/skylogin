@@ -7,6 +7,7 @@
 #include <windows.h>
 #include <winsock.h>
 #pragma comment (lib,"ws2_32.lib")
+#define int64_t __int64
 
 #else
 
@@ -16,7 +17,6 @@
 #include <string.h>
 typedef int SOCKET;
 #define closesocket close
-#define __int64 int64_t
 typedef int BOOL;
 #define TRUE  1
 #define FALSE 0
