@@ -22,7 +22,7 @@
 
 EXPORT SkyLogin *SkyLogin_Init()
 {
-	Skype_Inst *pInst = malloc(sizeof(Skype_Inst));
+	Skype_Inst *pInst = calloc(1, sizeof(Skype_Inst));
 
 #ifdef WIN32
 	WORD wVersionRequested;
@@ -36,8 +36,11 @@ EXPORT SkyLogin *SkyLogin_Init()
 	return (SkyLogin*)pInst;
 }
 
-EXPORT void SkyLogin_Exit(SkyLogin *pInst)
+EXPORT void SkyLogin_Exit(SkyLogin *pPInst)
 {
+	Skype_Inst *pInst = (Skype_Inst*)pPInst;
+	if (pInst->LoginD.RSAKeys) RSA_free(pInst->LoginD.RSAKeys);
+	if (pInst->LoginD.SignedCredentials.Memory) free(pInst->LoginD.SignedCredentials.Memory);
 	free(pInst);
 }
 

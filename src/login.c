@@ -16,6 +16,9 @@
 #include "random.h"
 #include "platform.h"
 #include "crc.h"
+#ifdef _DEBUG
+#include <time.h>
+#endif
 
 static Host LoginServers[] = {
 	/*
@@ -66,7 +69,7 @@ static int SendAuthentificationBlobLS(Skype_Inst *pInst, SOCKET LSSock, char *Us
 	uchar				*Browser;
 	uchar				*Mark;
 	uchar				*MarkObjL;
-	uint				Idx, Size, Crc, BSize;
+	uint				Idx, Size, Crc, BSize, ret = 0;
 	HttpsPacketHeader	*HSHeader;
 	uchar				HSHeaderBuf[sizeof(HttpsPacketHeader)], RecvBuf[0x1000];
 	AES_KEY				AesKey;
@@ -220,7 +223,7 @@ static int SendAuthentificationBlobLS(Skype_Inst *pInst, SOCKET LSSock, char *Us
 		return (-1);
 	}
 
-	while (recv(LSSock, (char *)&HSHeaderBuf, sizeof(HSHeaderBuf), 0)>0)
+	while (!ret && recv(LSSock, (char *)&HSHeaderBuf, sizeof(HSHeaderBuf), 0)>0)
 	{
 		HSHeader = (HttpsPacketHeader *)HSHeaderBuf;
 		if (strncmp((const char *)HSHeader->MAGIC, HTTPS_HSRR_MAGIC, strlen(HTTPS_HSRR_MAGIC)) ||
@@ -240,33 +243,48 @@ static int SendAuthentificationBlobLS(Skype_Inst *pInst, SOCKET LSSock, char *Us
 		AES_ctr128_encrypt(RecvBuf, RecvBuf, BSize, &AesKey, ivec, ecount_buf, &Idx);
 
 		Browser = RecvBuf;
-		ManageObjects(&Browser, BSize, &Response);
+		while (Browser<RecvBuf+BSize)
+			ManageObjects(&Browser, BSize, &Response);
 		for (Idx = 0; Idx < Response.NbObj; Idx++)
 		{
 			uint LdIdx = 0;
 
-			if (Response.Objs[Idx].Id == OBJ_ID_LOGINANSWER)
+			
+			switch (Response.Objs[Idx].Id)
 			{
+			case OBJ_ID_LOGINANSWER:
 				switch (Response.Objs[Idx].Value.Nbr)
 				{
 				case LOGIN_OK:
 					DBGPRINT("Login Successful..\n");
 					pInst->LoginD.RSAKeys = Keys;
-					FreeResponse(&Response);
-					return 1;
+					ret = 1;
+					break;
 				default :
 					DBGPRINT("Login Failed.. Bad Credentials..\n");
 					FreeResponse(&Response);
 					return 0;
 				}
 				break;
+			case OBJ_ID_CIPHERDLOGD:
+				if (!(pInst->LoginD.SignedCredentials.Memory = malloc(Response.Objs[Idx].Value.Memory.MsZ)))
+				{
+					FreeResponse(&Response);
+					return -2;
+				}
+				memcpy (pInst->LoginD.SignedCredentials.Memory, Response.Objs[Idx].Value.Memory.Memory, 
+					(pInst->LoginD.SignedCredentials.MsZ = Response.Objs[Idx].Value.Memory.MsZ));				
+				break;
 			}
 		}
 		FreeResponse(&Response);
 	}
 
-
-	return 0;
+	if (ret != 1)
+	{
+		RSA_free(Keys);
+	}
+	return ret;
 }
 
 

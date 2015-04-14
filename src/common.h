@@ -72,10 +72,10 @@ typedef struct
 
 typedef struct
 {
-	uchar		*User;
+	//uchar		*User;
 	uint		Expiry;
 	RSA			*RSAKeys;
-	Memory_U	Modulus;
+	//Memory_U	Modulus;
 	Memory_U	SignedCredentials;
 }	SLoginDatas;
 
