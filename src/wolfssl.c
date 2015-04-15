@@ -11,7 +11,7 @@ int RSA_private_encrypt(word32 inLen, const byte *in,
 
 int AES_set_encrypt_key (const unsigned char *userKey, const int bits, AES_KEY *key)
 {
-	memcpy(key->key,userKey,bits/8);
+	memcpy(key->key,userKey,(key->bytes=bits/8));
 }
 
 void AES_ctr128_encrypt(const byte *in, byte *out, word32 len, AES_KEY *key,
@@ -20,7 +20,7 @@ void AES_ctr128_encrypt(const byte *in, byte *out, word32 len, AES_KEY *key,
 	Aes aes;
 	byte RecvBuf[0x1000];
 
-	wc_AesSetKey(&aes, key->key, 16, ivec, AES_ENCRYPTION);
+	wc_AesSetKey(&aes, key->key, key->bytes, ivec, AES_ENCRYPTION);
 	wc_AesCtrEncrypt(&aes, RecvBuf, in, len);
 	memcpy(out, RecvBuf, len);
 }

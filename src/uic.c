@@ -77,9 +77,9 @@ Memory_U CreateUIC(Skype_Inst *pInst, const char *pszNonce, const char *pszSalt)
 
 char *CreateUICString(Skype_Inst *pInst, const char *pszNonce, const char *pszSalt)
 {
-	uint outlen = 512;
 	Memory_U uic = CreateUIC(pInst, pszNonce, pszSalt);
-	char *pszRet = malloc(outlen);
+	uint outlen = 1024;
+	char *pszRet = calloc(1, outlen);
 
 	Base64_Encode(uic.Memory, uic.MsZ, pszRet, &outlen);
 	pszRet[outlen]=0;
