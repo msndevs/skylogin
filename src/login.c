@@ -78,12 +78,18 @@ static int SendAuthentificationBlobLS(Skype_Inst *pInst, SOCKET LSSock, char *Us
 	RSA					*SkypeRSA;
 	ObjectDesc			Obj2000, ObjSessionKey, ObjZBool1, ObjRequestCode, ObjZBool2, ObjUserName, ObjSharedSecret, ObjModulus, ObjPlatForm, ObjLang, ObjMiscDatas, ObjVer, ObjPubAddr;
 	SResponse			Response={0};
+	BIGNUM				*KeyExp;
 
 	DBGPRINT("Generating RSA Keys Pair (Size = %d Bits)..\n", KEYSZ);
-	Keys = RSA_generate_key(KEYSZ * 2, RSA_F4, NULL, NULL);
-	if (Keys == NULL)
+	Keys = RSA_new();
+	KeyExp = BN_new();
+	BN_set_word(KeyExp, RSA_F4);
+	Idx = RSA_generate_key_ex(Keys, KEYSZ * 2, KeyExp, NULL);
+	BN_free(KeyExp);
+	if (Idx == -1)
 	{
 		DBGPRINT("Error generating Keys..\n\n");
+		RSA_free(Keys);
 		return (0);
 	}
 
@@ -110,9 +116,15 @@ static int SendAuthentificationBlobLS(Skype_Inst *pInst, SOCKET LSSock, char *Us
 
 	SkypeRSA = RSA_new();
 	BN_hex2bn(&(SkypeRSA->n), SkypeModulus1536[1]);
-	BN_hex2bn(&(SkypeRSA->e), "10001");
-	RSA_public_encrypt(SK_SZ, pInst->SessionKey, pInst->SessionKey, SkypeRSA, RSA_NO_PADDING);
+	BN_hex2bn(&(SkypeRSA->e), "010001");
+	Idx = RSA_public_encrypt(SK_SZ, pInst->SessionKey, pInst->SessionKey, SkypeRSA, RSA_NO_PADDING);
 	RSA_free(SkypeRSA);
+	if (Idx < 0)
+	{
+		DBGPRINT("RSA_public_encrypt failed..\n\n");
+		RSA_free(Keys);
+		return (0);
+	}
 
 	ObjSessionKey.Family = OBJ_FAMILY_BLOB;
 	ObjSessionKey.Id = OBJ_ID_SK;

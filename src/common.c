@@ -19,3 +19,6 @@ char	*SkypeModulus1536[] = {"c095de9e868dc9fe1de94ab5e38e8dbdcae7e6249ef147de503
 							   NULL
 							  };
 
+#ifdef CRYPT_WOLFSSL
+#include "wolfssl.c"
+#endif

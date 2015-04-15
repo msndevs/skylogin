@@ -30,10 +30,14 @@ typedef int BOOL;
 #define DBGPRINT
 #endif
 
+#ifdef CRYPT_WOLFSSL
+#include "wolfssl.h"
+#else
 #include <openssl/md5.h>
 #include <openssl/aes.h>
 #include <openssl/rsa.h>
 #include <openssl/sha.h>
+#endif
 
 typedef	 unsigned char		uchar;
 typedef	 unsigned short		ushort;

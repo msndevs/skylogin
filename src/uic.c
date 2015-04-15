@@ -13,8 +13,31 @@
  */
 #include "common.h"
 #include "random.h"
-#include <openssl/buffer.h>
+
+#ifndef CRYPT_WOLFSSL
+/* OpenSSL Base64_Encode */
 #include <openssl/evp.h>
+#include <openssl/buffer.h>
+
+static int Base64_Encode(const uchar* in, uint inLen, uchar* out, uint* outLen)
+{
+	BIO *bmem, *b64;
+	BUF_MEM *bptr;
+	int ret=0;
+
+	b64 = BIO_new(BIO_f_base64());
+	bmem = BIO_new(BIO_s_mem());
+	b64 = BIO_push(b64, bmem);
+	BIO_write(b64, in, inLen);
+	BIO_flush(b64);
+	BIO_get_mem_ptr(b64, &bptr);
+	if (*outLen>bptr->length) *outLen=bptr->length; else ret=-1;
+	memcpy(out, bptr->data, *outLen);
+	BIO_free_all(b64);
+	return ret;
+}
+#endif
+
 
 Memory_U CreateUIC(Skype_Inst *pInst, const char *pszNonce, const char *pszSalt)
 {
@@ -51,25 +74,15 @@ Memory_U CreateUIC(Skype_Inst *pInst, const char *pszNonce, const char *pszSalt)
 	return uic;
 }
 
+
 char *CreateUICString(Skype_Inst *pInst, const char *pszNonce, const char *pszSalt)
 {
+	uint outlen = 512;
 	Memory_U uic = CreateUIC(pInst, pszNonce, pszSalt);
-	char *pszRet;
-	BIO *bmem, *b64;
-	BUF_MEM *bptr;
+	char *pszRet = malloc(outlen);
 
-	b64 = BIO_new(BIO_f_base64());
-	bmem = BIO_new(BIO_s_mem());
-	b64 = BIO_push(b64, bmem);
-	BIO_write(b64, uic.Memory, uic.MsZ);
-	BIO_flush(b64);
-	BIO_get_mem_ptr(b64, &bptr);
-	if ((pszRet = (char *)malloc(bptr->length)))
-	{
-		memcpy(pszRet, bptr->data, bptr->length-1);
-		pszRet[bptr->length-1] = 0;
-	}
-	BIO_free_all(b64);
+	Base64_Encode(uic.Memory, uic.MsZ, pszRet, &outlen);
+	pszRet[outlen]=0;
 	free(uic.Memory);
 	return pszRet;
 }
