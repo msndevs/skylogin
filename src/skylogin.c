@@ -20,7 +20,7 @@
 #include "uic.h"
 #include "skylogin.h"
 
-EXPORT SkyLogin *SkyLogin_Init()
+EXPORT SkyLogin SkyLogin_Init()
 {
 	Skype_Inst *pInst = calloc(1, sizeof(Skype_Inst));
 
@@ -36,7 +36,7 @@ EXPORT SkyLogin *SkyLogin_Init()
 	return (SkyLogin*)pInst;
 }
 
-EXPORT void SkyLogin_Exit(SkyLogin *pPInst)
+EXPORT void SkyLogin_Exit(SkyLogin pPInst)
 {
 	Skype_Inst *pInst = (Skype_Inst*)pPInst;
 	if (pInst->LoginD.RSAKeys) RSA_free(pInst->LoginD.RSAKeys);
@@ -44,12 +44,12 @@ EXPORT void SkyLogin_Exit(SkyLogin *pPInst)
 	free(pInst);
 }
 
-EXPORT int SkyLogin_PerformLogin(SkyLogin *pInst, char *User, char *Pass)
+EXPORT int SkyLogin_PerformLogin(SkyLogin pInst, char *User, char *Pass)
 {
 	return PerformLogin((Skype_Inst*)pInst, User, Pass);
 }
 
-EXPORT char *SkyLogin_CreateUICString(SkyLogin *pInst, const char *pszNonce)
+EXPORT int SkyLogin_CreateUICString(SkyLogin pInst, const char *pszNonce, char *pszOutUIC)
 {
-	return CreateUICString((Skype_Inst*)pInst, pszNonce, "WS-SecureConversationSESSION KEY TOKEN");
+	return CreateUICString((Skype_Inst*)pInst, pszNonce, "WS-SecureConversationSESSION KEY TOKEN", pszOutUIC);
 }

@@ -13,6 +13,7 @@
  */
 #include "common.h"
 #include "random.h"
+#include "skylogin.h"
 
 #ifndef CRYPT_WOLFSSL
 /* OpenSSL Base64_Encode */
@@ -75,15 +76,17 @@ Memory_U CreateUIC(Skype_Inst *pInst, const char *pszNonce, const char *pszSalt)
 }
 
 
-char *CreateUICString(Skype_Inst *pInst, const char *pszNonce, const char *pszSalt)
+int CreateUICString(Skype_Inst *pInst, const char *pszNonce, const char *pszSalt, char *pszOutUIC)
 {
 	Memory_U uic = CreateUIC(pInst, pszNonce, pszSalt);
-	uint outlen = 1024;
-	char *pszRet = calloc(1, outlen);
 
-	Base64_Encode(uic.Memory, uic.MsZ, pszRet, &outlen);
-	pszRet[outlen]=0;
-	free(uic.Memory);
-	return pszRet;
+	if (uic.MsZ && uic.Memory)
+	{
+		uint outlen = UICSTR_SIZE;
+		
+		Base64_Encode(uic.Memory, uic.MsZ, pszOutUIC, &outlen);
+		pszOutUIC[outlen]=0;
+		free(uic.Memory);
+	}
+	return uic.MsZ;
 }
-

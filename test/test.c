@@ -4,8 +4,8 @@
 
 int main(int argc, char **argv)
 {
-	SkyLogin *hLogin;
-	char *pszUIC;
+	SkyLogin hLogin;
+	char szUIC[UICSTR_SIZE];
 
 	if (argc<4)
 	{
@@ -25,9 +25,8 @@ int main(int argc, char **argv)
 		return -1;
 	}
 
-	pszUIC = SkyLogin_CreateUICString(hLogin, argv[3]);
-	printf ("Your UIC is:\n%s\n", pszUIC);
-	free(pszUIC);
+	if (SkyLogin_CreateUICString(hLogin, argv[3], szUIC))
+		printf ("Your UIC is:\n%s\n", szUIC);
 
 	SkyLogin_Exit(hLogin);
 
