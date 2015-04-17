@@ -99,41 +99,46 @@ void	 InitNodeId(Skype_Inst *pInst)
 	//memcpy_s(NodeID, NODEID_SZ, "\x97\xca\xb1\x72\x06\xf6\x72\xb4", NODEID_SZ);
 }
 
-/* Not implemented yet 
-#if 0
-int SaveLoginDatas(Skype_Inst *pInst)
+Memory_U Credentials_Load(char *pszUser)
+{
+	Memory_U creds={0};
+	HKEY hKey;
+	char  szKey[MAX_PATH];
+
+	sprintf (szKey, "SOFTWARE\\FakeSkype\\%s", pszUser);
+	if (RegCreateKey(HKEY_LOCAL_MACHINE, szKey, &hKey) == ERROR_SUCCESS)
+	{
+		if (RegQueryValueEx(hKey, "Credentials", NULL, NULL, NULL, &creds.MsZ) == ERROR_SUCCESS &&
+			creds.MsZ)
+		{
+			if (!(creds.Memory = malloc(creds.MsZ)))
+				creds.MsZ = 0;
+			if (creds.Memory && RegQueryValueEx(hKey, "Credentials", NULL, NULL, creds.Memory, &creds.MsZ) != ERROR_SUCCESS)
+			{
+				free(creds.Memory);
+				ZeroMemory(&creds, sizeof(creds));
+			}
+		}
+		RegCloseKey(hKey);
+	}
+	return creds;
+}
+
+int Credentials_Save(Memory_U creds, char *pszUser)
 {
 	HKEY hKey;
 	int iRet = 0;
 
-	if (RegCreateKey(HKEY_LOCAL_MACHINE, "SOFTWARE\\FakeSkype\\LoginDatas", &hKey) == ERROR_SUCCESS)
+	char  szKey[MAX_PATH];
+
+	sprintf (szKey, "SOFTWARE\\FakeSkype\\%s", pszUser);
+	if (RegCreateKey(HKEY_LOCAL_MACHINE, szKey, &hKey) == ERROR_SUCCESS)
 	{
-		iRet = ERROR_SUCCESS;
-		if (pInst->LoginD.User)
-			iRet =| RegSetValueEx(hKey, "User", 0, REG_SZ, (LPBYTE)&pInst->LoginD.User, strlen(pInst->LoginD.User)) == ERROR_SUCCESS;
-		// PEM_write_PrivateKey ?
-		iRet |= RegSetValueEx(hKey, "RSAKeys", 0, REG_BINARY, (LPBYTE)&pInst->LoginD.RSAKeys, sizeof(pInst->LoginD)) == ERROR_SUCCESS;
-		iRet = RegSetValueEx(hKey, "LoginDatas", 0, REG_BINARY, (LPBYTE)&pInst->LoginD, sizeof(pInst->LoginD)) == ERROR_SUCCESS;
+		iRet = RegSetValueEx(hKey, "Credentials", 0, REG_BINARY, creds.Memory, creds.MsZ) == ERROR_SUCCESS;
 		RegCloseKey(hKey);
 	}
 	return iRet;
 }
-
-int LoadLoginDatas(Skype_Inst *pInst)
-{
-	HKEY hKey;
-	DWORD dwSize = sizeof(pInst->LoginD);
-	int iRet = 0;
-
-	if (RegCreateKey(HKEY_LOCAL_MACHINE, "SOFTWARE\\FakeSkype\\LoginDatas", &hKey) == ERROR_SUCCESS)
-	{
-		iRet = RegQueryValueEx(hKey, "LoginDatas", NULL, NULL, (LPBYTE)&pInst->LoginD, &dwSize) == ERROR_SUCCESS;
-		RegCloseKey(hKey);
-	}
-	return iRet;
-}
-#endif
-*/
 
 void FillMiscDatas(Skype_Inst *pInst, unsigned int *Datas)
 {

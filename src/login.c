@@ -60,7 +60,6 @@ static int SendAuthentificationBlobLS(Skype_Inst *pInst, SOCKET LSSock, char *Us
 {
 	int64_t				PlatForm;
 	uchar				AuthBlob[0xFFFF] = {0};
-	uchar				MD5Result[MD5_DIGEST_LENGTH] = {0};
 	uchar				SHAResult[32] = {0};
 	uchar				Modulus[MODULUS_SZ * 2] = {0};
 	uchar				ivec[AES_BLOCK_SIZE] = {0};
@@ -167,11 +166,11 @@ static int SendAuthentificationBlobLS(Skype_Inst *pInst, SOCKET LSSock, char *Us
 	MD5_Update(&Context, User, (ulong)strlen(User));
 	MD5_Update(&Context, CONCAT_SALT, (ulong)strlen(CONCAT_SALT));
 	MD5_Update(&Context, Pass, (ulong)strlen(Pass));
-	MD5_Final(MD5Result, &Context);
+	MD5_Final(pInst->LoginD.LoginHash, &Context);
 
 	ObjSharedSecret.Family = OBJ_FAMILY_BLOB;
 	ObjSharedSecret.Id = OBJ_ID_USERPASS;
-	ObjSharedSecret.Value.Memory.Memory = (uchar *)MD5Result;
+	ObjSharedSecret.Value.Memory.Memory = (uchar *)pInst->LoginD.LoginHash;
 	ObjSharedSecret.Value.Memory.MsZ = MD5_DIGEST_LENGTH;
 	WriteObject(&Browser, ObjSharedSecret);
 

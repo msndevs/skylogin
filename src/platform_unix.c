@@ -13,10 +13,12 @@
  */
 #include <sys/ioctl.h>
 #include <sys/utsname.h>
+#include <sys/types.h>
 #include <net/if.h>
 #include <stropts.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <pwd.h>
 #include "common.h"
 #include "random.h"
 
@@ -69,6 +71,15 @@ static int getMACAddr(unsigned char *pResult)
 	return 0;
 }
 
+static const char *getConfigDir()
+{
+	const char *homedir;
+
+	if (!(homedir = getenv("HOME")) && !(homedir = getenv("HOME")) &&
+		!(homedir = getpwuid(getuid())->pw_dir)) homedir=".";
+	return homedir;
+}
+
 int64_t PlatFormSpecific()
 {
 	unsigned char	mac_addr[6];
@@ -105,9 +116,12 @@ void	 InitNodeId(Skype_Inst *pInst)
 	FILE *fp;
 	int64_t NodeID;
 	int ok=0;
+	char  szDir[PATH_MAX], *p;
 
 	*(int64_t *)&pInst->NodeID = BytesRandomI64();
-	if (fp=fopen("fakeskype.nodid", "rb"))
+	p = szDir + sprintf (szDir, "%s/.SkyLogin", getConfigDir());
+	strcpy (p, "/NodeID");
+	if (fp=fopen(szDir, "rb"))
 	{
 		if ((ok = fread(&NodeID, sizeof(NodeID), 1, fp)) == 1)
 			*(int64_t*)pInst->NodeID = NodeID;
@@ -115,12 +129,58 @@ void	 InitNodeId(Skype_Inst *pInst)
 	}
 	if (!ok)
 	{
-		if (fp=fopen("fakeskype.nodid", "wb"))
+		*p=0;
+		mkdir(szDir, 0755);
+		*p='/';
+		if (fp=fopen(szDir, "wb"))
 		{
 			fwrite(&pInst->NodeID, sizeof(NodeID), 1, fp);
 			fclose(fp);
 		}
 	}
+}
+
+Memory_U Credentials_Load(char *pszUser)
+{
+	Memory_U creds={0};
+	FILE *fp;
+	char  szKey[PATH_MAX];
+
+	sprintf (szKey, "%s/.SkyLogin/%s/Credentials", getConfigDir(), pszUser);
+	if (fp = fopen (szKey, "r"))
+	{
+		fseek(fp, 0, SEEK_END);
+		creds.MsZ = ftell(fp);
+		fseek(fp, 0, SEEK_SET);
+		if (!(creds.Memory = malloc(creds.MsZ)))
+			creds.MsZ = 0;
+		if (creds.Memory && fread(creds.Memory, creds.MsZ, 1, fp)!=1)
+		{
+			free(creds.Memory);
+			memset(&creds, 0, sizeof(creds));
+		}
+		fclose(fp);
+	}
+	return creds;
+}
+
+int Credentials_Save(Memory_U creds, char *pszUser)
+{
+	FILE *fp;
+	int iRet = 0;
+	char  szKey[PATH_MAX];
+
+	sprintf (szKey, "%s/.SkyLogin/", getConfigDir());
+	mkdir(szKey, 0755);
+	strcat (szKey, pszUser);
+	mkdir(szKey, 0755);
+	strcat (szKey, "/Credentials");
+	if (fp = fopen (szKey, "w"))
+	{
+		iRet = fwrite(creds.Memory, creds.MsZ, 1, fp);
+		fclose(fp);
+	}
+	return iRet;
 }
 
 void FillMiscDatas(Skype_Inst *pInst, unsigned int *Datas)

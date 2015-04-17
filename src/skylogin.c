@@ -13,11 +13,15 @@
  */
 #ifdef WIN32
 #define EXPORT __declspec(dllexport)
+#define strcasecmp stricmp
 #endif
+#include <time.h>
 #include "common.h"
 #include "login.h"
 #include "platform.h"
 #include "uic.h"
+#include "objects.h"
+#include "credentials.h"
 #include "skylogin.h"
 
 EXPORT SkyLogin SkyLogin_Init()
@@ -46,7 +50,54 @@ EXPORT void SkyLogin_Exit(SkyLogin pPInst)
 
 EXPORT int SkyLogin_PerformLogin(SkyLogin pInst, char *User, char *Pass)
 {
-	return PerformLogin((Skype_Inst*)pInst, User, Pass);
+	Memory_U creds = Credentials_Load(User);
+	int ret = 0;
+
+	if (creds.Memory)
+	{
+		// Credentials were found and loaded, now let's parse them.
+		SResponse LoginDatas;
+
+		if (Credentials_Read(pInst, creds, &LoginDatas) == 0)
+		{
+			// Credentials were successfully read :)
+			// Now verify if they are still valid
+			uint Idx;
+			time_t t;
+
+			for (Idx = 0, ret = 1; ret && Idx < LoginDatas.NbObj; Idx++)
+			{
+				switch (LoginDatas.Objs[Idx].Id)
+				{
+				case OBJ_ID_LDUSER:
+					// Credentials for wrong user?
+					ret = !strcasecmp(LoginDatas.Objs[Idx].Value.Memory.Memory, User);
+					break;
+				case OBJ_ID_LDEXPIRY:
+					// Credentials expired?
+					ret = (int)LoginDatas.Objs[Idx].Value.Nbr * 60 > time(&t)-60;
+					break;
+				}
+			}
+			FreeResponse(&LoginDatas);
+		}
+		free(creds.Memory);
+	}
+	if (!ret)
+	{
+		// If no valid credentials found, perform login
+		if ((ret = PerformLogin((Skype_Inst*)pInst, User, Pass)) > 0)
+		{
+			// On successful login, save login datas
+			creds = Credentials_Write(pInst);
+			if (creds.Memory)
+			{
+				Credentials_Save(creds, User);
+				free (creds.Memory);
+			}
+		}
+	}
+	return ret;
 }
 
 EXPORT int SkyLogin_CreateUICString(SkyLogin pInst, const char *pszNonce, char *pszOutUIC)

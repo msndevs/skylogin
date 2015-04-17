@@ -4,7 +4,7 @@ DEBUGFLAGS   = -I include/ -fPIC -O0 -D _DEBUG -DDEBUG -g
 
 TARGET  = libskylogin.so
 SSLLIB  = openssl
-SOURCES = src/common.c src/crc.c src/login.c src/objects.c src/platform_unix.c src/random.c src/skylogin.c src/uic.c
+SOURCES = src/common.c src/crc.c src/login.c src/objects.c src/platform_unix.c src/random.c src/skylogin.c src/uic.c src/credentials.c
 LDFLAGS = -shared `pkg-config --cflags --libs $(SSLLIB)`
 OBJECTS = $(SOURCES:.c=.o)
 

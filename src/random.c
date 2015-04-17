@@ -118,6 +118,50 @@ void		BuildUnFinalizedDatas(uchar *Datas, uint Size, uchar *Result)
 	Result[Idx] = 0xBC;
 }
 
+uchar		*FinalizeLoginDatas(uchar *Buffer, uint *Size, uchar *Suite, int SuiteSz)
+{
+	int		Idx;
+	uchar	*Result;
+	SHA_CTX	Context;
+	uchar	SHARes[SHA_DIGEST_LENGTH] = {0};
+
+	Idx = 0;
+	if (Buffer[*Size - 1] != 0xBC)
+		return (NULL);
+	if (SuiteSz)
+	{
+		if (*Buffer != 0x6A)
+			return (NULL);
+		*Size = 0x6A + SuiteSz;
+		Idx += 1;
+		goto Copy;
+	}
+	while ((Buffer[Idx] & 0x0F) == 0x0B)
+		Idx++;
+	if ((Buffer[Idx] & 0x0F) != 0x0A)
+		return (NULL);
+	Idx += 1;
+	*Size = (*Size - 0x15) - Idx;
+
+Copy:
+	Result = (uchar *)malloc(*Size);
+	memcpy(Result, Buffer + Idx, *Size - SuiteSz);
+	if (SuiteSz) memcpy(Result + (*Size - SuiteSz), Suite, SuiteSz);
+
+	SHA1_Init(&Context);
+	SHA1_Update(&Context, Result, *Size);
+	SHA1_Final(SHARes, &Context);
+
+	if (strncmp((char *)SHARes, (char *)(Buffer + Idx + (*Size - SuiteSz)), SHA_DIGEST_LENGTH))
+	{
+		DBGPRINT("Bad SHA Digest for unencrypted Datas..\n");
+		free(Result);
+		return (NULL);
+	}
+
+	return (Result);
+}
+
 void			GenSessionKey(uchar *Buffer, uint Size)
 {
 	uint		Idx, Rander;

@@ -59,7 +59,9 @@ Memory_U CreateUIC(Skype_Inst *pInst, const char *pszNonce, const char *pszSalt)
 	p+=cbSalt;
 	memcpy(p, pszNonce, cbNonce);
 	BuildUnFinalizedDatas(uic_pkt.Memory, uic_pkt.MsZ, SignedChallenge);
-	RSA_private_encrypt(sizeof(SignedChallenge), SignedChallenge, SignedChallenge, pInst->LoginD.RSAKeys, RSA_NO_PADDING);
+	if (RSA_private_encrypt(sizeof(SignedChallenge), SignedChallenge, SignedChallenge, 
+		pInst->LoginD.RSAKeys, RSA_NO_PADDING)<0)
+		return uic;
 	free (uic_pkt.Memory);
 	if (!(uic.Memory = (uchar*)malloc(uic.MsZ = sizeof(SignedChallenge) + pInst->LoginD.SignedCredentials.MsZ + 4)))
 	{
