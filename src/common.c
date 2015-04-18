@@ -58,7 +58,7 @@ uchar	KeyDescTable[] = {
 
 char *KeySelect(uint KeyIndex)
 {
-	ulong *pKeyDescTable = (ulong*)KeyDescTable;
+	uint *pKeyDescTable = (uint*)KeyDescTable;
 	char *pRet;
 
 	if (pKeyDescTable[1] <= 0x1000)

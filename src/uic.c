@@ -69,8 +69,8 @@ Memory_U CreateUIC(Skype_Inst *pInst, const char *pszNonce, const char *pszSalt)
 		return uic;
 	}
 	p = uic.Memory;
-	*((ulong*)p) = htonl(pInst->LoginD.SignedCredentials.MsZ);
-	p+=sizeof(ulong);
+	*((uint*)p) = htonl(pInst->LoginD.SignedCredentials.MsZ);
+	p+=sizeof(uint);
 	memcpy(p, pInst->LoginD.SignedCredentials.Memory, pInst->LoginD.SignedCredentials.MsZ);
 	p+=pInst->LoginD.SignedCredentials.MsZ;
 	memcpy(p, SignedChallenge, sizeof(SignedChallenge));

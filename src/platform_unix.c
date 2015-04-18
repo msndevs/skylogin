@@ -19,6 +19,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <pwd.h>
+#include <limits.h>
 #include "common.h"
 #include "random.h"
 

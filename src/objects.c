@@ -144,9 +144,9 @@ int		DecodeRawObjects(uchar **Buffer, uint Size, SResponse *Response, ObjectDesc
 			break;
 		case OBJ_FAMILY_NETADDR:
 #ifdef WIN32
-			IP.S_un.S_addr = *(unsigned long *)*Buffer;
+			IP.S_un.S_addr = *(unsigned int *)*Buffer;
 #else
-			IP.s_addr = *(unsigned long *)*Buffer;
+			IP.s_addr = *(unsigned int *)*Buffer;
 #endif
 			memset(Object->Value.Addr.ip, 0, MAX_IP_LEN + 1);
 			strncpy(Object->Value.Addr.ip, inet_ntoa(IP), MAX_IP_LEN + 1);
