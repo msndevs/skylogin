@@ -30,6 +30,13 @@ typedef int BOOL;
 #define DBGPRINT
 #endif
 
+/* Use Skype 5+ Diffie-Hellmann RC4 wrapped login comunication. 
+ * Fortunately Login servers also still work without it too. 
+ * To keep library small and clean, we keep it disabled too,
+ * but you can enable it if you want.
+ */
+//#define USE_RC4
+
 #ifdef CRYPT_WOLFSSL
 #include "wolfssl.h"
 #else
@@ -37,6 +44,10 @@ typedef int BOOL;
 #include <openssl/aes.h>
 #include <openssl/rsa.h>
 #include <openssl/sha.h>
+#ifdef USE_RC4
+#include <openssl/rc4.h>
+#include <openssl/dh.h>
+#endif
 #endif
 
 typedef	 unsigned char		uchar;
@@ -92,6 +103,15 @@ typedef struct
 	uint			PublicIP;
 	SLoginDatas		LoginD; 
 }	Skype_Inst;
+
+typedef struct 
+{
+	SOCKET			LSSock;
+#ifdef USE_RC4
+	RC4_KEY			rc4_send;
+	RC4_KEY			rc4_recv;
+#endif
+}	LSConnection;
 
 #pragma	pack(1)
 typedef struct

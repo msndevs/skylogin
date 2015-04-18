@@ -20,18 +20,20 @@
 #include <time.h>
 #endif
 
+#ifdef USE_RC4
+#include "rc4comm.c"
+#else
+#define RC4Comm_Init(conn) 0
+#define RC4Comm_Send(conn,buf,len) send(conn->LSSock,buf,len,0)
+#define RC4Comm_Recv(conn,buf,len) recv(conn->LSSock,buf,len,0)
+#endif
+
 static Host LoginServers[] = {
-	/*
-	{"213.166.51.4", 33033},
-	{"193.88.6.13", 33033},
-	{"194.165.188.79", 33033},
-	{"195.46.253.219", 33033},*/
 	{"91.190.216.17", 33033},
 	{"91.190.218.40", 33033},
-	{0, 0}
 };
 
-static BOOL SendHandShake2LS(SOCKET LSSock, Host *CurLS)
+static BOOL SendHandShake2LS(LSConnection *pConn, Host *CurLS)
 {
 	uchar				HandShakePkt[HANDSHAKE_SZ] = {0};
 	HttpsPacketHeader	*HSHeader, Response;
@@ -42,21 +44,22 @@ static BOOL SendHandShake2LS(SOCKET LSSock, Host *CurLS)
 	HSHeader->ResponseLen = 0;
 	DBGPRINT("Sending Handshake to Login Server %s..\n", CurLS->ip);
 	Sender.sin_family = AF_INET;
-	Sender.sin_port = htons(HTTPS_PORT);
+	Sender.sin_port = htons(CurLS->port);
 	Sender.sin_addr.s_addr = inet_addr(CurLS->ip);
-	if (connect(LSSock, (struct sockaddr *)&Sender, sizeof(Sender)) < 0)
+	if (connect(pConn->LSSock, (struct sockaddr *)&Sender, sizeof(Sender)) < 0)
 	{
 		DBGPRINT("Connection refused..\n");
 		return FALSE;
 	}
-	if (send(LSSock, (const char *)HandShakePkt, HANDSHAKE_SZ, 0)<=0 ||
-		recv(LSSock, (char *)&Response, sizeof(Response), 0)<=0 ||
+	if (RC4Comm_Init(pConn) < 0 ||
+		RC4Comm_Send(pConn, (const char *)HandShakePkt, HANDSHAKE_SZ)<=0 ||
+		RC4Comm_Recv(pConn, (char*)&Response, sizeof(Response))<=0 ||
 		memcmp(Response.MAGIC, HTTPS_HSRR_MAGIC, sizeof(Response.MAGIC)))
 		return FALSE;
 	return TRUE;
 }
 
-static int SendAuthentificationBlobLS(Skype_Inst *pInst, SOCKET LSSock, char *User, char *Pass)
+static int SendAuthentificationBlobLS(Skype_Inst *pInst, LSConnection *pConn, char *User, char *Pass)
 {
 	int64_t				PlatForm;
 	uchar				AuthBlob[0xFFFF] = {0};
@@ -65,6 +68,7 @@ static int SendAuthentificationBlobLS(Skype_Inst *pInst, SOCKET LSSock, char *Us
 	uchar				ivec[AES_BLOCK_SIZE] = {0};
 	uchar				ecount_buf[AES_BLOCK_SIZE] = {0};
 	uint				MiscDatas[0x05] = {0};
+	uchar				SessionKey[SK_SZ];
 	uchar				*Browser;
 	uchar				*Mark;
 	uchar				*MarkObjL;
@@ -116,7 +120,7 @@ static int SendAuthentificationBlobLS(Skype_Inst *pInst, SOCKET LSSock, char *Us
 	SkypeRSA = RSA_new();
 	BN_hex2bn(&(SkypeRSA->n), SkypeModulus1536[1]);
 	BN_hex2bn(&(SkypeRSA->e), "010001");
-	Idx = RSA_public_encrypt(SK_SZ, pInst->SessionKey, pInst->SessionKey, SkypeRSA, RSA_NO_PADDING);
+	Idx = RSA_public_encrypt(SK_SZ, pInst->SessionKey, SessionKey, SkypeRSA, RSA_NO_PADDING);
 	RSA_free(SkypeRSA);
 	if (Idx < 0)
 	{
@@ -127,7 +131,7 @@ static int SendAuthentificationBlobLS(Skype_Inst *pInst, SOCKET LSSock, char *Us
 
 	ObjSessionKey.Family = OBJ_FAMILY_BLOB;
 	ObjSessionKey.Id = OBJ_ID_SK;
-	ObjSessionKey.Value.Memory.Memory = (uchar *)&pInst->SessionKey;
+	ObjSessionKey.Value.Memory.Memory = (uchar *)&SessionKey;
 	ObjSessionKey.Value.Memory.MsZ = SK_SZ;
 	WriteObject(&Browser, ObjSessionKey);
 
@@ -228,17 +232,17 @@ static int SendAuthentificationBlobLS(Skype_Inst *pInst, SOCKET LSSock, char *Us
 
 	Size = (uint)(Browser - AuthBlob);
 
-	if (send(LSSock, (const char *)AuthBlob, Size, 0)<=0)
+	if (RC4Comm_Send(pConn, (const char *)AuthBlob, Size)<=0)
 	{
 		DBGPRINT("Sending to LS failed :'(..\n");
 		return (-1);
 	}
 
-	while (!ret && recv(LSSock, (char *)&HSHeaderBuf, sizeof(HSHeaderBuf), 0)>0)
+	while (!ret && RC4Comm_Recv(pConn, (char *)&HSHeaderBuf, sizeof(HSHeaderBuf))>0)
 	{
 		HSHeader = (HttpsPacketHeader *)HSHeaderBuf;
 		if (strncmp((const char *)HSHeader->MAGIC, HTTPS_HSRR_MAGIC, strlen(HTTPS_HSRR_MAGIC)) ||
-			recv(LSSock, (char *)RecvBuf, (BSize=htons(HSHeader->ResponseLen)), 0)<=0)
+			RC4Comm_Recv(pConn, (char *)RecvBuf, (BSize=htons(HSHeader->ResponseLen)))<=0)
 		{
 			DBGPRINT("Bad Response..\n");
 			return (-2);
@@ -303,20 +307,20 @@ int PerformLogin(Skype_Inst *pInst, char *User, char *Pass)
 {
 	uint			ReUse = 1;
 	int				i;
-	SOCKET			LSSock;
+	LSConnection	conn={0};
 	int				iRet = 0;
 
 	for (i=0; !iRet && i<sizeof(LoginServers)/sizeof(LoginServers[0]); i++)
 	{
-		LSSock = socket(AF_INET, SOCK_STREAM, 0);
-		setsockopt(LSSock, SOL_SOCKET, SO_REUSEADDR, (const char *)&ReUse, sizeof(ReUse));
+		conn.LSSock = socket(AF_INET, SOCK_STREAM, 0);
+		setsockopt(conn.LSSock, SOL_SOCKET, SO_REUSEADDR, (const char *)&ReUse, sizeof(ReUse));
 
-		if (SendHandShake2LS(LSSock, &LoginServers[i]))
+		if (SendHandShake2LS(&conn, &LoginServers[i]))
 		{
 			DBGPRINT("Login Server %s OK ! Let's authenticate..\n", LoginServers[i].ip);
-			iRet = SendAuthentificationBlobLS(pInst, LSSock, User, Pass);
+			iRet = SendAuthentificationBlobLS(pInst, &conn, User, Pass);
 		}
-		closesocket(LSSock);
+		closesocket(conn.LSSock);
 	}
 
 	if (!iRet) DBGPRINT("Login Failed..\n");

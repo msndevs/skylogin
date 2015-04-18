@@ -7,6 +7,9 @@
 #include <wolfssl/openssl/sha.h>
 #include <wolfssl/openssl/evp.h>
 
+/* WOLFSSL has no RC4 implementation? */
+#undef USE_RC4
+
 /* Fix some missing defs from wolfssl OpenSSL Compat layer */
 #ifndef MD5_DIGEST_LENGTH
 #define MD5_DIGEST_LENGTH 16
