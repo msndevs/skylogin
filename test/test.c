@@ -19,7 +19,9 @@ int main(int argc, char **argv)
 		fprintf (stderr, "Error: OOM!\n");
 		return -1;
 	}
-	if (!(SkyLogin_PerformLogin(hLogin, argv[1], argv[2])))
+
+	if (!SkyLogin_LoadCredentials(hLogin, argv[1]) &&
+		!SkyLogin_PerformLogin(hLogin, argv[1], argv[2]))
 	{
 		fprintf (stderr, "Error: Login failed!\n");
 		return -1;

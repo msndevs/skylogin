@@ -44,7 +44,7 @@ static BOOL SendHandShake2LS(LSConnection *pConn, Host *CurLS)
 	HSHeader->ResponseLen = 0;
 	DBGPRINT("Sending Handshake to Login Server %s..\n", CurLS->ip);
 	Sender.sin_family = AF_INET;
-	Sender.sin_port = htons(CurLS->port);
+	Sender.sin_port = htons((short)CurLS->port);
 	Sender.sin_addr.s_addr = inet_addr(CurLS->ip);
 	if (connect(pConn->LSSock, (struct sockaddr *)&Sender, sizeof(Sender)) < 0)
 	{

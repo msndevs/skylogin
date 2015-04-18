@@ -48,7 +48,7 @@ EXPORT void SkyLogin_Exit(SkyLogin pPInst)
 	free(pInst);
 }
 
-EXPORT int SkyLogin_PerformLogin(SkyLogin pInst, char *User, char *Pass)
+EXPORT int SkyLogin_LoadCredentials(SkyLogin pInst, char *User)
 {
 	Memory_U creds = Credentials_Load(User);
 	int ret = 0;
@@ -83,18 +83,22 @@ EXPORT int SkyLogin_PerformLogin(SkyLogin pInst, char *User, char *Pass)
 		}
 		free(creds.Memory);
 	}
-	if (!ret)
+	return ret;
+}
+
+EXPORT int SkyLogin_PerformLogin(SkyLogin pInst, char *User, char *Pass)
+{
+	int ret;
+
+	// If no valid credentials found, perform login
+	if ((ret = PerformLogin((Skype_Inst*)pInst, User, Pass)) > 0)
 	{
-		// If no valid credentials found, perform login
-		if ((ret = PerformLogin((Skype_Inst*)pInst, User, Pass)) > 0)
+		// On successful login, save login datas
+		Memory_U creds = Credentials_Write(pInst);
+		if (creds.Memory)
 		{
-			// On successful login, save login datas
-			creds = Credentials_Write(pInst);
-			if (creds.Memory)
-			{
-				Credentials_Save(creds, User);
-				free (creds.Memory);
-			}
+			Credentials_Save(creds, User);
+			free (creds.Memory);
 		}
 	}
 	return ret;

@@ -13,6 +13,12 @@ EXPORT SkyLogin SkyLogin_Init();
 /* Uninitialize Skylogin Instance */
 EXPORT void SkyLogin_Exit(SkyLogin pInst);
 
+/* Load Credentials from cache, if they are available and valid
+ * Returns:
+ * 1 if credentials are successfully loaded, 
+ * 0 if they are invalid or don't exist */
+EXPORT int SkyLogin_LoadCredentials(SkyLogin pInst, char *pszUser);
+
 /* Perform login with Username and Password 
  * Returns:
  * 1 on success, 0 on failure, -1 on socket error, -2 on bad response */

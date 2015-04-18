@@ -32,7 +32,7 @@ static int Base64_Encode(const uchar* in, uint inLen, uchar* out, uint* outLen)
 	BIO_write(b64, in, inLen);
 	BIO_flush(b64);
 	BIO_get_mem_ptr(b64, &bptr);
-	if (*outLen>bptr->length) *outLen=bptr->length; else ret=-1;
+	if (*outLen>(uint)bptr->length) *outLen=bptr->length; else ret=-1;
 	memcpy(out, bptr->data, *outLen);
 	BIO_free_all(b64);
 	return ret;
