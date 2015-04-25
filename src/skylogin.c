@@ -108,3 +108,10 @@ EXPORT int SkyLogin_CreateUICString(SkyLogin pInst, const char *pszNonce, char *
 {
 	return CreateUICString((Skype_Inst*)pInst, pszNonce, "WS-SecureConversationSESSION KEY TOKEN", pszOutUIC);
 }
+
+#ifdef WIN32
+BOOL WINAPI DllMain(HINSTANCE hinstDLL,DWORD fdwReason,LPVOID lpvReserved)
+{
+	return TRUE;
+}
+#endif

@@ -173,7 +173,7 @@ int		DecodeRawObjects(uchar **Buffer, uint Size, SResponse *Response, ObjectDesc
 			ReadValue(Buffer, &(Object->Value.Memory.MsZ));
 			Object->Value.Memory.Memory = (uchar *)malloc(Object->Value.Memory.MsZ * sizeof(uint));
 			for (IdxUp = 0; IdxUp < Object->Value.Memory.MsZ; IdxUp++)
-				ReadValue(Buffer, (uint*)(Object->Value.Memory.Memory + (Idx * sizeof(uint))));
+				ReadValue(Buffer, (uint*)(Object->Value.Memory.Memory + (IdxUp * sizeof(uint))));
 			break;
 		case OBJ_FAMILY_OBJLIST:
 		{

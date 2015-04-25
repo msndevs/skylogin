@@ -53,7 +53,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=xilink6.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /dll /machine:I386
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib libeay32.lib ssleay32.lib /nologo /subsystem:windows /dll /machine:I386 /libpath:"libs\openssl"
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib libeay32.lib ssleay32.lib /nologo /subsystem:windows /dll /machine:I386 /out:"Release/skylogin.dll" /libpath:"libs\openssl"
 
 !ELSEIF  "$(CFG)" == "login - Win32 Debug"
 
@@ -97,6 +97,10 @@ SOURCE=src\common.c
 # Begin Source File
 
 SOURCE=src\crc.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\credentials.c
 # End Source File
 # Begin Source File
 
