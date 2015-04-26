@@ -104,9 +104,20 @@ EXPORT int SkyLogin_PerformLogin(SkyLogin pInst, char *User, char *Pass)
 	return ret;
 }
 
+EXPORT int SkyLogin_PerformLoginOAuth(SkyLogin pInst, char *OAuth)
+{
+	return PerformLogin((Skype_Inst*)pInst, OAuth, NULL) > 0;
+}
+
+
 EXPORT int SkyLogin_CreateUICString(SkyLogin pInst, const char *pszNonce, char *pszOutUIC)
 {
 	return CreateUICString((Skype_Inst*)pInst, pszNonce, "WS-SecureConversationSESSION KEY TOKEN", pszOutUIC);
+}
+
+EXPORT int SkyLogin_GetCredentialsUIC(SkyLogin pInst, char *pszOutUIC)
+{
+	return GetCredentialsUIC((Skype_Inst*)pInst, pszOutUIC);
 }
 
 #ifdef WIN32

@@ -59,6 +59,7 @@ static BOOL SendHandShake2LS(LSConnection *pConn, Host *CurLS)
 	return TRUE;
 }
 
+/* If Pass is NULL, User is assumed to be OAuth string and OAuth logon is performed */
 static int SendAuthentificationBlobLS(Skype_Inst *pInst, LSConnection *pConn, char *User, char *Pass)
 {
 	int64_t				PlatForm;
@@ -79,7 +80,7 @@ static int SendAuthentificationBlobLS(Skype_Inst *pInst, LSConnection *pConn, ch
 	MD5_CTX				Context;
 	RSA					*Keys;
 	RSA					*SkypeRSA;
-	ObjectDesc			Obj2000, ObjSessionKey, ObjZBool1, ObjRequestCode, ObjZBool2, ObjUserName, ObjSharedSecret, ObjModulus, ObjPlatForm, ObjLang, ObjMiscDatas, ObjVer, ObjPubAddr;
+	ObjectDesc			Obj2000, ObjSessionKey, ObjZBool1, ObjRequestCode, ObjZBool2, ObjModulus, ObjPlatForm, ObjMiscDatas, ObjVer, ObjPubAddr;
 	SResponse			Response={0};
 	BIGNUM				*KeyExp;
 
@@ -147,76 +148,145 @@ static int SendAuthentificationBlobLS(Skype_Inst *pInst, LSConnection *pConn, ch
 	Browser += sizeof(HttpsPacketHeader);
 
 	MarkObjL = Browser;
-	*Browser++ = RAW_PARAMS;
-	*Browser++ = 0x04;
+	if (Pass)
+	{
+		ObjectDesc ObjUserName, ObjSharedSecret, ObjLang;
 
-	ObjRequestCode.Family = OBJ_FAMILY_NBR;
-	ObjRequestCode.Id = OBJ_ID_REQCODE;
-	ObjRequestCode.Value.Nbr = 0x1399;
-	WriteObject(&Browser, ObjRequestCode);
+		*Browser++ = RAW_PARAMS;
+		*Browser++ = 0x04;
 
-	ObjZBool2.Family = OBJ_FAMILY_NBR;
-	ObjZBool2.Id = OBJ_ID_ZBOOL2;
-	ObjZBool2.Value.Nbr = 0x01;
-	WriteObject(&Browser, ObjZBool2);
+		ObjRequestCode.Family = OBJ_FAMILY_NBR;
+		ObjRequestCode.Id = OBJ_ID_REQCODE;
+		ObjRequestCode.Value.Nbr = 0x1399;
+		WriteObject(&Browser, ObjRequestCode);
 
-	ObjUserName.Family = OBJ_FAMILY_STRING;
-	ObjUserName.Id = OBJ_ID_USERNAME;
-	ObjUserName.Value.Memory.Memory = (uchar *)User;
-	ObjUserName.Value.Memory.MsZ = (uchar)strlen(User);
-	WriteObject(&Browser, ObjUserName);
+		ObjZBool2.Family = OBJ_FAMILY_NBR;
+		ObjZBool2.Id = OBJ_ID_ZBOOL2;
+		ObjZBool2.Value.Nbr = 0x01;
+		WriteObject(&Browser, ObjZBool2);
 
-	MD5_Init(&Context);
-	MD5_Update(&Context, User, (ulong)strlen(User));
-	MD5_Update(&Context, CONCAT_SALT, (ulong)strlen(CONCAT_SALT));
-	MD5_Update(&Context, Pass, (ulong)strlen(Pass));
-	MD5_Final(pInst->LoginD.LoginHash, &Context);
+		ObjUserName.Family = OBJ_FAMILY_STRING;
+		ObjUserName.Id = OBJ_ID_USERNAME;
+		ObjUserName.Value.Memory.Memory = (uchar *)User;
+		ObjUserName.Value.Memory.MsZ = (uchar)strlen(User);
+		WriteObject(&Browser, ObjUserName);
 
-	ObjSharedSecret.Family = OBJ_FAMILY_BLOB;
-	ObjSharedSecret.Id = OBJ_ID_USERPASS;
-	ObjSharedSecret.Value.Memory.Memory = (uchar *)pInst->LoginD.LoginHash;
-	ObjSharedSecret.Value.Memory.MsZ = MD5_DIGEST_LENGTH;
-	WriteObject(&Browser, ObjSharedSecret);
+		MD5_Init(&Context);
+		MD5_Update(&Context, User, (ulong)strlen(User));
+		MD5_Update(&Context, CONCAT_SALT, (ulong)strlen(CONCAT_SALT));
+		MD5_Update(&Context, Pass, (ulong)strlen(Pass));
+		MD5_Final(pInst->LoginD.LoginHash, &Context);
 
-	*Browser++ = RAW_PARAMS;
-	*Browser++ = 0x06;
+		ObjSharedSecret.Family = OBJ_FAMILY_BLOB;
+		ObjSharedSecret.Id = OBJ_ID_USERPASS;
+		ObjSharedSecret.Value.Memory.Memory = (uchar *)pInst->LoginD.LoginHash;
+		ObjSharedSecret.Value.Memory.MsZ = MD5_DIGEST_LENGTH;
+		WriteObject(&Browser, ObjSharedSecret);
 
-	ObjModulus.Family = OBJ_FAMILY_BLOB;
-	ObjModulus.Id = OBJ_ID_MODULUS;
-	ObjModulus.Value.Memory.Memory = (uchar *)Modulus;
-	ObjModulus.Value.Memory.MsZ = MODULUS_SZ;
-	WriteObject(&Browser, ObjModulus);
+		*Browser++ = RAW_PARAMS;
+		*Browser++ = 0x06;
 
-	PlatForm = PlatFormSpecific();
+		ObjModulus.Family = OBJ_FAMILY_BLOB;
+		ObjModulus.Id = OBJ_ID_MODULUS;
+		ObjModulus.Value.Memory.Memory = (uchar *)Modulus;
+		ObjModulus.Value.Memory.MsZ = MODULUS_SZ;
+		WriteObject(&Browser, ObjModulus);
 
-	ObjPlatForm.Family = OBJ_FAMILY_TABLE;
-	ObjPlatForm.Id = OBJ_ID_PLATFORM;
-	memcpy(ObjPlatForm.Value.Table, (uchar *)&PlatForm, sizeof(ObjPlatForm.Value.Table));
-	WriteObject(&Browser, ObjPlatForm);
+		PlatForm = PlatFormSpecific();
 
-	ObjLang.Family = OBJ_FAMILY_STRING;
-	ObjLang.Id = OBJ_ID_LANG;
-	ObjLang.Value.Memory.Memory = pInst->Language;
-	ObjLang.Value.Memory.MsZ = sizeof(pInst->Language);
-	WriteObject(&Browser, ObjLang);
+		ObjPlatForm.Family = OBJ_FAMILY_TABLE;
+		ObjPlatForm.Id = OBJ_ID_PLATFORM;
+		memcpy(ObjPlatForm.Value.Table, (uchar *)&PlatForm, sizeof(ObjPlatForm.Value.Table));
+		WriteObject(&Browser, ObjPlatForm);
 
-	FillMiscDatas(pInst, MiscDatas);
-	ObjMiscDatas.Family = OBJ_FAMILY_INTLIST;
-	ObjMiscDatas.Id = OBJ_ID_MISCD;
-	ObjMiscDatas.Value.Memory.Memory = (uchar *)MiscDatas;
-	ObjMiscDatas.Value.Memory.MsZ = 0x05;
-	WriteObject(&Browser, ObjMiscDatas);
+		ObjLang.Family = OBJ_FAMILY_STRING;
+		ObjLang.Id = OBJ_ID_LANG;
+		ObjLang.Value.Memory.Memory = pInst->Language;
+		ObjLang.Value.Memory.MsZ = sizeof(pInst->Language);
+		WriteObject(&Browser, ObjLang);
 
-	ObjVer.Family = OBJ_FAMILY_STRING;
-	ObjVer.Id = OBJ_ID_VERSION;
-	ObjVer.Value.Memory.Memory = (uchar *)VER_STR;
-	ObjVer.Value.Memory.MsZ = (uchar)strlen(VER_STR);
-	WriteObject(&Browser, ObjVer);
+		FillMiscDatas(pInst, MiscDatas);
+		ObjMiscDatas.Family = OBJ_FAMILY_INTLIST;
+		ObjMiscDatas.Id = OBJ_ID_MISCD;
+		ObjMiscDatas.Value.Memory.Memory = (uchar *)MiscDatas;
+		ObjMiscDatas.Value.Memory.MsZ = 0x05;
+		WriteObject(&Browser, ObjMiscDatas);
 
-	ObjPubAddr.Family = OBJ_FAMILY_NBR;
-	ObjPubAddr.Id = OBJ_ID_PUBADDR;
-	ObjPubAddr.Value.Nbr = pInst->PublicIP;
-	WriteObject(&Browser, ObjPubAddr);
+		ObjVer.Family = OBJ_FAMILY_STRING;
+		ObjVer.Id = OBJ_ID_VERSION;
+		ObjVer.Value.Memory.Memory = (uchar *)VER_STR;
+		ObjVer.Value.Memory.MsZ = (uchar)strlen(VER_STR);
+		WriteObject(&Browser, ObjVer);
+
+		ObjPubAddr.Family = OBJ_FAMILY_NBR;
+		ObjPubAddr.Id = OBJ_ID_PUBADDR;
+		ObjPubAddr.Value.Nbr = pInst->PublicIP;
+		WriteObject(&Browser, ObjPubAddr);
+	}
+	else
+	{
+		int64_t			PartnerId = 999;
+		ObjectDesc		ObjPartnerId, ObjOauth;
+
+		// OAuth logon
+		*Browser++ = RAW_PARAMS;
+		*Browser++ = 0x02;
+
+		ObjRequestCode.Family = OBJ_FAMILY_NBR;
+		ObjRequestCode.Id = OBJ_ID_REQCODE;
+		ObjRequestCode.Value.Nbr = 0x13a3;
+		WriteObject(&Browser, ObjRequestCode);
+
+		ObjZBool2.Family = OBJ_FAMILY_NBR;
+		ObjZBool2.Id = OBJ_ID_ZBOOL2;
+		ObjZBool2.Value.Nbr = 0x2d;
+		WriteObject(&Browser, ObjZBool2);
+
+		*Browser++ = RAW_PARAMS;
+		*Browser++ = 0x07;
+
+		ObjModulus.Family = OBJ_FAMILY_BLOB;
+		ObjModulus.Id = OBJ_ID_MODULUS;
+		ObjModulus.Value.Memory.Memory = (uchar *)Modulus;
+		ObjModulus.Value.Memory.MsZ = MODULUS_SZ;
+		WriteObject(&Browser, ObjModulus);
+
+		PlatForm = PlatFormSpecific();
+
+		ObjPlatForm.Family = OBJ_FAMILY_TABLE;
+		ObjPlatForm.Id = OBJ_ID_PLATFORM;
+		memcpy(ObjPlatForm.Value.Table, (uchar *)&PlatForm, sizeof(ObjPlatForm.Value.Table));
+		WriteObject(&Browser, ObjPlatForm);
+
+		FillMiscDatas(pInst, MiscDatas);
+		ObjMiscDatas.Family = OBJ_FAMILY_INTLIST;
+		ObjMiscDatas.Id = OBJ_ID_MISCD;
+		ObjMiscDatas.Value.Memory.Memory = (uchar *)MiscDatas;
+		ObjMiscDatas.Value.Memory.MsZ = 0x05;
+		WriteObject(&Browser, ObjMiscDatas);
+
+		ObjPartnerId.Family = OBJ_FAMILY_TABLE;
+		ObjPlatForm.Id = OBJ_ID_PARTNERID;
+		memcpy(ObjPlatForm.Value.Table, (uchar *)&PartnerId, sizeof(ObjPlatForm.Value.Table));
+		WriteObject(&Browser, ObjPlatForm);
+
+		ObjOauth.Family = OBJ_FAMILY_STRING;
+		ObjOauth.Id = OBJ_ID_OAUTH;
+		ObjOauth.Value.Memory.Memory = (uchar *)User;
+		ObjOauth.Value.Memory.MsZ = (uchar)strlen(User);
+		WriteObject(&Browser, ObjOauth);
+
+		ObjVer.Family = OBJ_FAMILY_STRING;
+		ObjVer.Id = OBJ_ID_VERSION;
+		ObjVer.Value.Memory.Memory = (uchar *)VER_STR;
+		ObjVer.Value.Memory.MsZ = (uchar)strlen(VER_STR);
+		WriteObject(&Browser, ObjVer);
+
+		ObjPubAddr.Family = OBJ_FAMILY_NBR;
+		ObjPubAddr.Id = OBJ_ID_PUBADDR;
+		ObjPubAddr.Value.Nbr = pInst->PublicIP;
+		WriteObject(&Browser, ObjPubAddr);
+	}
 
 	Size = (uint)(Browser - MarkObjL);
 	HSHeader->ResponseLen = htons((u_short)(Size + 0x02));

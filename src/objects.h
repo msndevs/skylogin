@@ -56,6 +56,8 @@ typedef struct
 #define  OBJ_ID_VERSION		0x0D
 #define  OBJ_ID_PUBADDR		0x0E
 #define  OBJ_ID_MISCD		0x33
+#define  OBJ_ID_OAUTH		0x3D
+#define  OBJ_ID_PARTNERID   0x3E
 #define	 OBJ_ID_STACKVER	0x0B
 #define	 OBJ_ID_STACKTS		0x0C
 #define	 OBJ_ID_PEERLPORT	0x10

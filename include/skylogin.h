@@ -24,6 +24,11 @@ EXPORT int SkyLogin_LoadCredentials(SkyLogin pInst, char *pszUser);
  * 1 on success, 0 on failure, -1 on socket error, -2 on bad response */
 EXPORT int SkyLogin_PerformLogin(SkyLogin pInst, char *pszUser, char *pszPass);
 
+/* Perform login with OAuth token
+ * Returns:
+ * 1 on success, 0 on failure, -1 on socket error, -2 on bad response */
+EXPORT int SkyLogin_PerformLoginOAuth(SkyLogin pInst, char *OAuth);
+
 /* Creates UIC string from nonce pszNonce and places it in pszOutUIC
  * pszOutUIC buffer should be at least UICSTR_SIZE in size.
  *
@@ -32,3 +37,11 @@ EXPORT int SkyLogin_PerformLogin(SkyLogin pInst, char *pszUser, char *pszPass);
  */
 EXPORT int SkyLogin_CreateUICString(SkyLogin pInst, const char *pszNonce, char *pszOutUIC);
 
+/* Gets the base64 encoded signed Credentials after login. They are required if
+ * you do OAUTH-Login instead of UICString from avbove.
+ * pszOutUIC buffer should be at least UICSTR_SIZE in size.
+ *
+ * Returns:
+ * Size of UIC string in Bytes on success, 0 on failure
+ */
+EXPORT int SkyLogin_GetCredentialsUIC(SkyLogin pInst, char *pszOutUIC);

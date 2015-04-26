@@ -81,14 +81,25 @@ Memory_U CreateUIC(Skype_Inst *pInst, const char *pszNonce, const char *pszSalt)
 int CreateUICString(Skype_Inst *pInst, const char *pszNonce, const char *pszSalt, char *pszOutUIC)
 {
 	Memory_U uic = CreateUIC(pInst, pszNonce, pszSalt);
+	uint outlen = UICSTR_SIZE;
 
 	if (uic.MsZ && uic.Memory)
-	{
-		uint outlen = UICSTR_SIZE;
-		
+	{	
 		Base64_Encode(uic.Memory, uic.MsZ, pszOutUIC, &outlen);
 		pszOutUIC[outlen]=0;
 		free(uic.Memory);
-	}
-	return uic.MsZ;
+	} else return 0;
+	return outlen;
+}
+
+int GetCredentialsUIC(Skype_Inst *pInst, char *pszOutUIC)
+{
+	uint outlen = UICSTR_SIZE;
+
+	if (pInst->LoginD.SignedCredentials.MsZ)
+	{	
+		Base64_Encode(pInst->LoginD.SignedCredentials.Memory, pInst->LoginD.SignedCredentials.MsZ, pszOutUIC, &outlen);
+		pszOutUIC[outlen]=0;
+	} else return 0;
+	return outlen;
 }
