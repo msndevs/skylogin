@@ -87,7 +87,7 @@ typedef struct
 
 typedef struct
 {
-	//uchar		*User;
+	uchar		*User;
 	uchar		LoginHash[MD5_DIGEST_LENGTH];
 	uint		Expiry;
 	RSA			*RSAKeys;

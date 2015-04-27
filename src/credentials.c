@@ -61,6 +61,7 @@ int Credentials_Read(Skype_Inst *pInst, Memory_U creds, SResponse *LoginDatas)
 {
 	uchar *Browser;
 	uint Crc, Idx;
+	RSA	  *Keys;
 
 	if (creds.MsZ < sizeof(pInst->LoginD.LoginHash) + MODULUS_SZ + 16 + CRC_SIZE)
 		return -1;
@@ -78,36 +79,40 @@ int Credentials_Read(Skype_Inst *pInst, Memory_U creds, SResponse *LoginDatas)
 	Browser = creds.Memory;
 	memcpy (pInst->LoginD.LoginHash, Browser, sizeof(pInst->LoginD.LoginHash));
 	Browser+=sizeof(pInst->LoginD.LoginHash);
-	if (!pInst->LoginD.RSAKeys)
-	{
-		pInst->LoginD.RSAKeys=RSA_new();
-		BN_hex2bn(&(pInst->LoginD.RSAKeys->e), "010001");
-	}
-	pInst->LoginD.RSAKeys->d = BN_bin2bn(Browser, MODULUS_SZ, NULL);
+	Keys=RSA_new();
+	BN_hex2bn(&(Keys->e), "010001");
+	Keys->d = BN_bin2bn(Browser, MODULUS_SZ, NULL);
 	Browser+=MODULUS_SZ;
 	if (pInst->LoginD.SignedCredentials.Memory) free(pInst->LoginD.SignedCredentials.Memory);
 	pInst->LoginD.SignedCredentials.MsZ = creds.MsZ - CRC_SIZE - (Browser-creds.Memory);
 	if (!(pInst->LoginD.SignedCredentials.Memory = malloc(pInst->LoginD.SignedCredentials.MsZ)))
 	{
 		pInst->LoginD.SignedCredentials.MsZ = 0;
+		RSA_free(Keys);
 		return -3;
 	}
 	memcpy(pInst->LoginD.SignedCredentials.Memory, Browser, pInst->LoginD.SignedCredentials.MsZ);
 
 	// Now credentials are read, but we need to finish LoginD.RSAKeys by unpacking Signed Credentials
 	if (Credentials_Parse(pInst->LoginD.SignedCredentials, LoginDatas)<0)
+	{
+		RSA_free(Keys);
 		return -4;
+	}
 
 	for (Idx = 0; Idx < LoginDatas->NbObj; Idx++)
 	{
 		if (LoginDatas->Objs[Idx].Id == OBJ_ID_LDMODULUS)
 		{
-			pInst->LoginD.RSAKeys->n = BN_bin2bn(LoginDatas->Objs[Idx].Value.Memory.Memory, 
+			Keys->n = BN_bin2bn(LoginDatas->Objs[Idx].Value.Memory.Memory, 
 				LoginDatas->Objs[Idx].Value.Memory.MsZ, NULL);
+			if (pInst->LoginD.RSAKeys) RSA_free(pInst->LoginD.RSAKeys);
+			pInst->LoginD.RSAKeys = Keys;
 			return 0;
 		}
 	}
 
+	RSA_free(Keys);
 	return -5;
 }
 

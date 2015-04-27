@@ -60,7 +60,7 @@ static BOOL SendHandShake2LS(LSConnection *pConn, Host *CurLS)
 }
 
 /* If Pass is NULL, User is assumed to be OAuth string and OAuth logon is performed */
-static int SendAuthentificationBlobLS(Skype_Inst *pInst, LSConnection *pConn, char *User, char *Pass)
+static int SendAuthentificationBlobLS(Skype_Inst *pInst, LSConnection *pConn, const char *User, const char *Pass)
 {
 	int64_t				PlatForm;
 	uchar				AuthBlob[0xFFFF] = {0};
@@ -78,27 +78,32 @@ static int SendAuthentificationBlobLS(Skype_Inst *pInst, LSConnection *pConn, ch
 	uchar				HSHeaderBuf[sizeof(HttpsPacketHeader)], RecvBuf[0x1000];
 	AES_KEY				AesKey;
 	MD5_CTX				Context;
-	RSA					*Keys;
 	RSA					*SkypeRSA;
-	ObjectDesc			Obj2000, ObjSessionKey, ObjZBool1, ObjRequestCode, ObjZBool2, ObjModulus, ObjPlatForm, ObjMiscDatas, ObjVer, ObjPubAddr;
+	ObjectDesc			Obj2000, ObjSessionKey, ObjZBool1, ObjRequestCode, ObjZBool2, ObjModulus, ObjPlatForm, ObjLang, ObjMiscDatas, ObjVer, ObjPubAddr;
 	SResponse			Response={0};
-	BIGNUM				*KeyExp;
+	
 
-	DBGPRINT("Generating RSA Keys Pair (Size = %d Bits)..\n", KEYSZ);
-	Keys = RSA_new();
-	KeyExp = BN_new();
-	BN_set_word(KeyExp, RSA_F4);
-	Idx = RSA_generate_key_ex(Keys, KEYSZ * 2, KeyExp, NULL);
-	BN_free(KeyExp);
-	if (Idx == -1)
+	if (!pInst->LoginD.RSAKeys)
 	{
-		DBGPRINT("Error generating Keys..\n\n");
-		RSA_free(Keys);
-		return (0);
+		BIGNUM				*KeyExp;
+
+		DBGPRINT("Generating RSA Keys Pair (Size = %d Bits)..\n", KEYSZ);
+		pInst->LoginD.RSAKeys = RSA_new();
+		KeyExp = BN_new();
+		BN_set_word(KeyExp, RSA_F4);
+		Idx = RSA_generate_key_ex(pInst->LoginD.RSAKeys, KEYSZ * 2, KeyExp, NULL);
+		BN_free(KeyExp);
+		if (Idx == -1)
+		{
+			DBGPRINT("Error generating Keys..\n\n");
+			RSA_free(pInst->LoginD.RSAKeys);
+			pInst->LoginD.RSAKeys = NULL;
+			return (0);
+		}
 	}
 
-	Idx = BN_bn2bin(Keys->n, Modulus);
-	Idx = BN_bn2bin(Keys->d, Modulus + Idx);
+	Idx = BN_bn2bin(pInst->LoginD.RSAKeys->n, Modulus);
+	Idx = BN_bn2bin(pInst->LoginD.RSAKeys->d, Modulus + Idx);
 
 	Browser = AuthBlob;
 
@@ -126,7 +131,6 @@ static int SendAuthentificationBlobLS(Skype_Inst *pInst, LSConnection *pConn, ch
 	if (Idx < 0)
 	{
 		DBGPRINT("RSA_public_encrypt failed..\n\n");
-		RSA_free(Keys);
 		return (0);
 	}
 
@@ -150,7 +154,7 @@ static int SendAuthentificationBlobLS(Skype_Inst *pInst, LSConnection *pConn, ch
 	MarkObjL = Browser;
 	if (Pass)
 	{
-		ObjectDesc ObjUserName, ObjSharedSecret, ObjLang;
+		ObjectDesc ObjUserName, ObjSharedSecret;
 
 		*Browser++ = RAW_PARAMS;
 		*Browser++ = 0x04;
@@ -239,11 +243,11 @@ static int SendAuthentificationBlobLS(Skype_Inst *pInst, LSConnection *pConn, ch
 
 		ObjZBool2.Family = OBJ_FAMILY_NBR;
 		ObjZBool2.Id = OBJ_ID_ZBOOL2;
-		ObjZBool2.Value.Nbr = 0x2d;
+		ObjZBool2.Value.Nbr = 0x3d;
 		WriteObject(&Browser, ObjZBool2);
 
 		*Browser++ = RAW_PARAMS;
-		*Browser++ = 0x07;
+		*Browser++ = 0x08;
 
 		ObjModulus.Family = OBJ_FAMILY_BLOB;
 		ObjModulus.Id = OBJ_ID_MODULUS;
@@ -265,6 +269,12 @@ static int SendAuthentificationBlobLS(Skype_Inst *pInst, LSConnection *pConn, ch
 		ObjMiscDatas.Value.Memory.MsZ = 0x05;
 		WriteObject(&Browser, ObjMiscDatas);
 
+		ObjLang.Family = OBJ_FAMILY_STRING;
+		ObjLang.Id = OBJ_ID_LANG;
+		ObjLang.Value.Memory.Memory = pInst->Language;
+		ObjLang.Value.Memory.MsZ = sizeof(pInst->Language);
+		WriteObject(&Browser, ObjLang);
+
 		ObjPartnerId.Family = OBJ_FAMILY_TABLE;
 		ObjPlatForm.Id = OBJ_ID_PARTNERID;
 		memcpy(ObjPlatForm.Value.Table, (uchar *)&PartnerId, sizeof(ObjPlatForm.Value.Table));
@@ -273,7 +283,7 @@ static int SendAuthentificationBlobLS(Skype_Inst *pInst, LSConnection *pConn, ch
 		ObjOauth.Family = OBJ_FAMILY_STRING;
 		ObjOauth.Id = OBJ_ID_OAUTH;
 		ObjOauth.Value.Memory.Memory = (uchar *)User;
-		ObjOauth.Value.Memory.MsZ = (uchar)strlen(User);
+		ObjOauth.Value.Memory.MsZ = strlen(User);
 		WriteObject(&Browser, ObjOauth);
 
 		ObjVer.Family = OBJ_FAMILY_STRING;
@@ -342,7 +352,6 @@ static int SendAuthentificationBlobLS(Skype_Inst *pInst, LSConnection *pConn, ch
 				{
 				case LOGIN_OK:
 					DBGPRINT("Login Successful..\n");
-					pInst->LoginD.RSAKeys = Keys;
 					ret = 1;
 					break;
 				default :
@@ -352,6 +361,7 @@ static int SendAuthentificationBlobLS(Skype_Inst *pInst, LSConnection *pConn, ch
 				}
 				break;
 			case OBJ_ID_CIPHERDLOGD:
+				if (pInst->LoginD.SignedCredentials.Memory) free(pInst->LoginD.SignedCredentials.Memory);
 				if (!(pInst->LoginD.SignedCredentials.Memory = malloc(Response.Objs[Idx].Value.Memory.MsZ)))
 				{
 					FreeResponse(&Response);
@@ -365,15 +375,11 @@ static int SendAuthentificationBlobLS(Skype_Inst *pInst, LSConnection *pConn, ch
 		FreeResponse(&Response);
 	}
 
-	if (ret != 1)
-	{
-		RSA_free(Keys);
-	}
 	return ret;
 }
 
 
-int PerformLogin(Skype_Inst *pInst, char *User, char *Pass)
+int PerformLogin(Skype_Inst *pInst, const char *User, const char *Pass)
 {
 	uint			ReUse = 1;
 	int				i;
