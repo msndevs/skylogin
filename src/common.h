@@ -15,6 +15,10 @@
 #include <netinet/ip.h>
 #include <arpa/inet.h>
 #include <string.h>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <ctype.h>
 typedef int SOCKET;
 #define closesocket close
 typedef int BOOL;
