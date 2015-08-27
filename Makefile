@@ -14,7 +14,7 @@ BINDIR = $(PREFIX)/bin
 all: $(TARGET)
 
 $(TARGET): $(OBJECTS)
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $(TARGET) $(OBJECTS)
+	$(CC) $(CFLAGS) -o $(TARGET) $(OBJECTS) $(LDFLAGS)
 
 debug: CFLAGS := $(DEBUGFLAGS)
 debug: $(TARGET)
