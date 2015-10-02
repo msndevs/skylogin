@@ -142,8 +142,6 @@ static int SendAuthentificationBlobLS(Skype_Inst *pInst, LSConnection *pConn, co
 	MarkObjL = Browser;
 	if (Pass)
 	{
-		ObjectDesc ObjUserName, ObjSharedSecret;
-
 		*Browser++ = RAW_PARAMS;
 		*Browser++ = 0x04;
 
@@ -179,8 +177,6 @@ static int SendAuthentificationBlobLS(Skype_Inst *pInst, LSConnection *pConn, co
 	}
 	else
 	{
-		ObjectDesc		ObjPartnerId, ObjOauth;
-
 		// OAuth logon
 		*Browser++ = RAW_PARAMS;
 		*Browser++ = 0x02;
