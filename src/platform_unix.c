@@ -99,7 +99,7 @@ int64_t PlatFormSpecific()
 		SHA1_Init(&Context);
 		for (i=0; i<sizeof(pszFiles)/sizeof(pszFiles[0]); i++)
 		{
-			if (fp=fopen(pszFiles[i], "r"))
+			if ((fp=fopen(pszFiles[i], "r")))
 			{
 				if ((rd = fread(buf, 1, sizeof(buf)-1, fp)))
 					SHA1_Update(&Context, buf, rd);
@@ -121,7 +121,7 @@ void	 InitNodeId(Skype_Inst *pInst)
 	*(int64_t *)&pInst->NodeID = BytesRandomI64();
 	p = szDir + sprintf (szDir, "%s/.SkyLogin", getConfigDir());
 	strcpy (p, "/NodeID");
-	if (fp=fopen(szDir, "rb"))
+	if ((fp=fopen(szDir, "rb")))
 	{
 		if ((ok = fread(&NodeID, sizeof(NodeID), 1, fp)) == 1)
 			*(int64_t*)pInst->NodeID = NodeID;
@@ -132,7 +132,7 @@ void	 InitNodeId(Skype_Inst *pInst)
 		*p=0;
 		mkdir(szDir, 0755);
 		*p='/';
-		if (fp=fopen(szDir, "wb"))
+		if ((fp=fopen(szDir, "wb")))
 		{
 			fwrite(&pInst->NodeID, sizeof(NodeID), 1, fp);
 			fclose(fp);
@@ -147,7 +147,7 @@ Memory_U Credentials_Load(char *pszUser)
 	char  szKey[PATH_MAX];
 
 	sprintf (szKey, "%s/.SkyLogin/%s/Credentials", getConfigDir(), pszUser);
-	if (fp = fopen (szKey, "r"))
+	if ((fp = fopen (szKey, "r")))
 	{
 		fseek(fp, 0, SEEK_END);
 		creds.MsZ = ftell(fp);
@@ -175,7 +175,7 @@ int Credentials_Save(Memory_U creds, char *pszUser)
 	strcat (szKey, pszUser);
 	mkdir(szKey, 0755);
 	strcat (szKey, "/Credentials");
-	if (fp = fopen (szKey, "w"))
+	if ((fp = fopen (szKey, "w")))
 	{
 		iRet = fwrite(creds.Memory, creds.MsZ, 1, fp);
 		fclose(fp);
