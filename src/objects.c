@@ -36,11 +36,64 @@ void	ReadValue(uchar **BufferAddr, uint *Value)
 	for (*Value=0, c=**BufferAddr; a==0 || (c & 0x80); a+=7, (*BufferAddr)++) *Value|=((c=**BufferAddr) & 0x7F) << a;
 }
 
+void	WriteNbrObject(uchar **Buffer, uint id, uint nbr)
+{
+	WriteValue(Buffer, OBJ_FAMILY_NBR);
+	WriteValue(Buffer, id);
+	WriteValue(Buffer, nbr);
+}
+
+void	WriteStringObject(uchar **Buffer, uint id, const uchar *str, size_t len)
+{
+	WriteValue(Buffer, OBJ_FAMILY_STRING);
+	WriteValue(Buffer, id);
+	memcpy(*Buffer, str, len);
+	*Buffer += len;
+	*(*Buffer) = 0x00;
+	*Buffer += 1;
+}
+
+void	WriteBlobObject(uchar **Buffer, uint id, const uchar *blob, size_t len)
+{
+	WriteValue(Buffer, OBJ_FAMILY_BLOB);
+	WriteValue(Buffer, id);
+	WriteValue(Buffer, len);
+	memcpy(*Buffer, blob, len);
+	*Buffer += len;
+}
+
+void	WriteTableObject(uchar **Buffer, uint id, int64_t table)
+{
+	int	IdxDown;
+
+	WriteValue(Buffer, OBJ_FAMILY_TABLE);
+	WriteValue(Buffer, id);
+
+	for (IdxDown = sizeof(int64_t); IdxDown; IdxDown--)
+	{
+		*(*Buffer) = (table >> (8 * (IdxDown - 1))) & 0xff;
+		*Buffer += 1;
+	}
+}
+
+void	WriteIntListObject(uchar **Buffer, uint id, const uint *intlist, size_t len)
+{
+	int IdxUp;
+
+	WriteValue(Buffer, OBJ_FAMILY_INTLIST);
+	WriteValue(Buffer, id);
+	WriteValue(Buffer, len);
+
+	for (IdxUp = 0; IdxUp < len; IdxUp++)
+	{
+		WriteValue(Buffer, intlist[IdxUp]);
+	}
+}
+
 
 void	WriteObject(uchar **Buffer, ObjectDesc Object)
 {
-	int	IdxDown, IdxUp;
-
+	int IdxUp;
 	Object.ObjListInfos.Id = -1;
 	Object.ObjListInfos.Rank = 0;
 
@@ -48,47 +101,12 @@ void	WriteObject(uchar **Buffer, ObjectDesc Object)
 	WriteValue(Buffer, Object.Id);
 	switch(Object.Family)
 	{
-	case OBJ_FAMILY_NBR:
-		WriteValue(Buffer, Object.Value.Nbr);
-		break;
-	case OBJ_FAMILY_TABLE:
-		for (IdxDown = sizeof(int64_t); IdxDown; IdxDown--)
-		{
-			*(*Buffer) = (Object.Value.Table >> (8 * (IdxDown - 1))) & 0xff;
-			*Buffer += 1;
-		}
-		break;
 	case OBJ_FAMILY_NETADDR:
 		*(unsigned int *)(*Buffer) = inet_addr(Object.Value.Addr.ip);
 		*Buffer += 4;
 		*(unsigned short *)(*Buffer) = htons((u_short)Object.Value.Addr.port);
 		*Buffer += 2;
 		break;
-	case OBJ_FAMILY_BLOB:
-		WriteValue(Buffer, Object.Value.Memory.MsZ);
-		memcpy(*Buffer, Object.Value.Memory.Memory, Object.Value.Memory.MsZ);
-		*Buffer += Object.Value.Memory.MsZ;
-		break;
-	case OBJ_FAMILY_STRING:
-		memcpy(*Buffer, Object.Value.Memory.Memory, Object.Value.Memory.MsZ);
-		*Buffer += Object.Value.Memory.MsZ;
-		*(*Buffer) = 0x00;
-		*Buffer += 1;
-		break;
-	case OBJ_FAMILY_INTLIST:
-	{
-		uint	*IntList;
-
-		IdxUp = 0;
-		IntList = (uint *)Object.Value.Memory.Memory;
-		WriteValue(Buffer, Object.Value.Memory.MsZ);
-		while (IdxUp < Object.Value.Memory.MsZ)
-		{
-			WriteValue(Buffer, IntList[IdxUp]);
-			IdxUp++;
-		}
-		break;
-	}
 	default:
 		DBGPRINT("WriteObject : Unmanaged Object Family\n");
 		break;

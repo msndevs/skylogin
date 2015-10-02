@@ -134,3 +134,9 @@ void	WriteValue(uchar **BufferAddr, uint Value);
 void	WriteObject(uchar **Buffer, ObjectDesc Object);
 int		ManageObjects(uchar **Buffer, uint Size, SResponse *Response);
 void	FreeResponse(SResponse *Response);
+
+void	WriteNbrObject(uchar **Buffer, uint id, uint nbr);
+void	WriteStringObject(uchar **Buffer, uint id, const uchar *str, size_t len);
+void	WriteBlobObject(uchar **Buffer, uint id, const uchar *blob, size_t len);
+void	WriteTableObject(uchar **Buffer, uint id, int64_t table);
+void	WriteIntListObject(uchar **Buffer, uint id, const uint *intlist, size_t len);
