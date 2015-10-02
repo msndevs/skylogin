@@ -25,7 +25,6 @@
 
 static int getMACAddr(unsigned char *pResult)
 {
-	int res = 0;
 	struct ifreq ifr;
 	struct ifconf ifc;
 	char *pszIfs[] = {"eth0", "eth1", "eth2", "eth3", "wlan0", "wlan1", "usb0", "usb1", "wmaster0"};
