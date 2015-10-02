@@ -20,7 +20,7 @@
 #include <openssl/evp.h>
 #include <openssl/buffer.h>
 
-static int Base64_Encode(const uchar* in, uint inLen, uchar* out, uint* outLen)
+static int Base64_Encode(const uchar* in, uint inLen, char* out, uint* outLen)
 {
 	BIO *bmem, *b64;
 	BUF_MEM *bptr;

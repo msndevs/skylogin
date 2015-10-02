@@ -91,7 +91,7 @@ typedef struct
 
 typedef struct
 {
-	uchar		*User;
+	char		*User;
 	uchar		LoginHash[MD5_DIGEST_LENGTH];
 	uint		Expiry;
 	RSA			*RSAKeys;
@@ -103,7 +103,7 @@ typedef struct
 {
 	uchar			SessionKey[SK_SZ];
 	uchar			NodeID[NODEID_SZ];
-	uchar			Language[2];
+	char			Language[2];
 	uint			PublicIP;
 	SLoginDatas		LoginD; 
 }	Skype_Inst;

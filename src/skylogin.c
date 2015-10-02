@@ -74,9 +74,9 @@ EXPORT int SkyLogin_LoadCredentials(SkyLogin pPInst, char *User)
 				{
 				case OBJ_ID_LDUSER:
 					// Credentials for wrong user?
-					ret = !strcasecmp(LoginDatas.Objs[Idx].Value.Memory.Memory, User);
 					if (pInst->LoginD.User) free(pInst->LoginD.User);
-					pInst->LoginD.User = strdup(LoginDatas.Objs[Idx].Value.Memory.Memory);
+					pInst->LoginD.User = strdup((char *) LoginDatas.Objs[Idx].Value.Memory.Memory);
+					ret = !strcasecmp(pInst->LoginD.User, User);
 					break;
 				case OBJ_ID_LDEXPIRY:
 					// Credentials expired?
@@ -134,9 +134,9 @@ EXPORT int SkyLogin_PerformLoginOAuth(SkyLogin pPInst, const char *OAuth)
 				{ 
 					if (LoginDatas.Objs[Idx].Id == OBJ_ID_LDUSER)
 					{
-						Credentials_Save(creds, LoginDatas.Objs[Idx].Value.Memory.Memory);
 						if (pInst->LoginD.User) free(pInst->LoginD.User);
-						pInst->LoginD.User = strdup(LoginDatas.Objs[Idx].Value.Memory.Memory);
+						pInst->LoginD.User = strdup((char *) LoginDatas.Objs[Idx].Value.Memory.Memory);
+						Credentials_Save(creds, pInst->LoginD.User);
 						break;
 					}
 				}

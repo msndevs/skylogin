@@ -43,7 +43,7 @@ void	WriteNbrObject(uchar **Buffer, uint id, uint nbr)
 	WriteValue(Buffer, nbr);
 }
 
-void	WriteStringObject(uchar **Buffer, uint id, const uchar *str, size_t len)
+void	WriteStringObject(uchar **Buffer, uint id, const char *str, size_t len)
 {
 	WriteValue(Buffer, OBJ_FAMILY_STRING);
 	WriteValue(Buffer, id);
@@ -114,8 +114,8 @@ void	WriteObject(uchar **Buffer, ObjectDesc Object)
 
 int		DecodeRawObjects(uchar **Buffer, uint Size, SResponse *Response, ObjectDesc **Objs, int Suffix)
 {
-	int				NbObjs, lIdx, IdxUp, IdxDown;
-	uint			Family, Id;
+	int				lIdx, IdxUp, IdxDown;
+	uint			NbObjs, Family, Id;
 	uchar			*Str, *Mark;
 	struct in_addr	IP;
 	ObjectDesc		*Object;
@@ -172,7 +172,7 @@ int		DecodeRawObjects(uchar **Buffer, uint Size, SResponse *Response, ObjectDesc
 			*Buffer += 2;
 			break;
 		case OBJ_FAMILY_BLOB:
-			ReadValue(Buffer, &(Object->Value.Memory.MsZ));
+			ReadValue(Buffer, (uint*)&(Object->Value.Memory.MsZ));
 			Object->Value.Memory.Memory = (uchar *)malloc(Object->Value.Memory.MsZ);
 			memcpy(Object->Value.Memory.Memory, *Buffer, Object->Value.Memory.MsZ);
 			*Buffer += Object->Value.Memory.MsZ;
@@ -187,7 +187,7 @@ int		DecodeRawObjects(uchar **Buffer, uint Size, SResponse *Response, ObjectDesc
 			*Buffer += Object->Value.Memory.MsZ;
 			break;
 		case OBJ_FAMILY_INTLIST:
-			ReadValue(Buffer, &(Object->Value.Memory.MsZ));
+			ReadValue(Buffer, (uint*)&(Object->Value.Memory.MsZ));
 			Object->Value.Memory.Memory = (uchar *)malloc(Object->Value.Memory.MsZ * sizeof(uint));
 			for (IdxUp = 0; IdxUp < Object->Value.Memory.MsZ; IdxUp++)
 				ReadValue(Buffer, (uint*)(Object->Value.Memory.Memory + (IdxUp * sizeof(uint))));
