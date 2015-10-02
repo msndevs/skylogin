@@ -93,7 +93,6 @@ void	WriteIntListObject(uchar **Buffer, uint id, const uint *intlist, size_t len
 
 void	WriteObject(uchar **Buffer, ObjectDesc Object)
 {
-	int IdxUp;
 	Object.ObjListInfos.Id = -1;
 	Object.ObjListInfos.Rank = 0;
 

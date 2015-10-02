@@ -70,7 +70,6 @@ static int SendAuthentificationBlobLS(Skype_Inst *pInst, LSConnection *pConn, co
 	uint				MiscDatas[0x05] = {0};
 	uchar				SessionKey[SK_SZ];
 	uchar				*Browser;
-	uchar				*Mark;
 	uchar				*MarkObjL;
 	uint				Idx, Size, Crc, BSize, ret = 0;
 	HttpsPacketHeader	*HSHeader;
@@ -133,7 +132,6 @@ static int SendAuthentificationBlobLS(Skype_Inst *pInst, LSConnection *pConn, co
 
 	WriteNbrObject(&Browser, OBJ_ID_ZBOOL1, 0x01);
 
-	Mark = Browser;
 	HSHeader = (HttpsPacketHeader *)Browser;
 	memcpy(HSHeader->MAGIC, HTTPS_HSRR_MAGIC, sizeof(HSHeader->MAGIC));
 	HSHeader->ResponseLen = 0x00;
@@ -250,9 +248,6 @@ static int SendAuthentificationBlobLS(Skype_Inst *pInst, LSConnection *pConn, co
 			ManageObjects(&Browser, BSize, &Response);
 		for (Idx = 0; Idx < Response.NbObj; Idx++)
 		{
-			uint LdIdx = 0;
-
-			
 			switch (Response.Objs[Idx].Id)
 			{
 			case OBJ_ID_LOGINANSWER:
