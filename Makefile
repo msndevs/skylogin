@@ -19,6 +19,7 @@ $(TARGET): $(OBJECTS)
 
 debug: CFLAGS := $(DEBUGFLAGS)
 debug: $(TARGET)
+	make -C test debug
 
 wolfssl: SSLLIB := wolfssl
 wolfssl: CFLAGS := $(CFLAGS) -DCRYPT_WOLFSSL
