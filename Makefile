@@ -1,6 +1,6 @@
 CC    = gcc
 CFLAGS       = -I include/ -fPIC -O3 -D NDEBUG
-DEBUGFLAGS   = -I include/ -fPIC -O0 -D _DEBUG -DDEBUG -g
+DEBUGFLAGS   = -I include/ -fPIC -O0 -D _DEBUG -DDEBUG -g -Wall
 
 TARGET  = libskylogin.so
 SSLLIB  = openssl
