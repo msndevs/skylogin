@@ -59,7 +59,8 @@ static BOOL SendHandShake2LS(LSConnection *pConn, Host *CurLS)
 	return TRUE;
 }
 
-static void MakeLoginPasswordHash(Skype_Inst *pInst, const char *User, const char *Pass) {
+static void MakeLoginPasswordHash(Skype_Inst *pInst, const char *User, const char *Pass)
+{
 	MD5_CTX				Context;
 
 	MD5_Init(&Context);
@@ -69,7 +70,8 @@ static void MakeLoginPasswordHash(Skype_Inst *pInst, const char *User, const cha
 	MD5_Final(pInst->LoginD.LoginHash, &Context);
 }
 
-static int GenerateRSAKeys(Skype_Inst *pInst) {
+static int GenerateRSAKeys(Skype_Inst *pInst)
+{
 	uint Idx;
 	BIGNUM				*KeyExp;
 
@@ -89,7 +91,8 @@ static int GenerateRSAKeys(Skype_Inst *pInst) {
 	return 1;
 }
 
-static uchar *BuildAuthBlob(Skype_Inst *pInst, uchar *AuthBlob, const char *User, const char *Pass, uchar *Modulus, uchar *SessionKey, uchar **MarkObjLRet) {
+static uchar *BuildAuthBlob(Skype_Inst *pInst, uchar *AuthBlob, const char *User, const char *Pass, uchar *Modulus, uchar *SessionKey, uchar **MarkObjLRet)
+{
 	uint				MiscDatas[0x05] = {0};
 	uchar				*Browser;
 	uchar				*MarkObjL;
