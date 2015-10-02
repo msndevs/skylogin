@@ -69,6 +69,26 @@ static void MakeLoginPasswordHash(Skype_Inst *pInst, const char *User, const cha
 	MD5_Final(pInst->LoginD.LoginHash, &Context);
 }
 
+static int GenerateRSAKeys(Skype_Inst *pInst) {
+	uint Idx;
+	BIGNUM				*KeyExp;
+
+	DBGPRINT("Generating RSA Keys Pair (Size = %d Bits)..\n", KEYSZ);
+	pInst->LoginD.RSAKeys = RSA_new();
+	KeyExp = BN_new();
+	BN_set_word(KeyExp, RSA_F4);
+	Idx = RSA_generate_key_ex(pInst->LoginD.RSAKeys, KEYSZ * 2, KeyExp, NULL);
+	BN_free(KeyExp);
+	if (Idx == -1)
+	{
+		DBGPRINT("Error generating Keys..\n\n");
+		RSA_free(pInst->LoginD.RSAKeys);
+		pInst->LoginD.RSAKeys = NULL;
+		return 0;
+	}
+	return 1;
+}
+
 /* If Pass is NULL, User is assumed to be OAuth string and OAuth logon is performed */
 static int SendAuthentificationBlobLS(Skype_Inst *pInst, LSConnection *pConn, const char *User, const char *Pass)
 {
@@ -89,23 +109,9 @@ static int SendAuthentificationBlobLS(Skype_Inst *pInst, LSConnection *pConn, co
 	SResponse			Response={0};
 	
 
-	if (!pInst->LoginD.RSAKeys)
+	if (!pInst->LoginD.RSAKeys && !GenerateRSAKeys(pInst))
 	{
-		BIGNUM				*KeyExp;
-
-		DBGPRINT("Generating RSA Keys Pair (Size = %d Bits)..\n", KEYSZ);
-		pInst->LoginD.RSAKeys = RSA_new();
-		KeyExp = BN_new();
-		BN_set_word(KeyExp, RSA_F4);
-		Idx = RSA_generate_key_ex(pInst->LoginD.RSAKeys, KEYSZ * 2, KeyExp, NULL);
-		BN_free(KeyExp);
-		if (Idx == -1)
-		{
-			DBGPRINT("Error generating Keys..\n\n");
-			RSA_free(pInst->LoginD.RSAKeys);
-			pInst->LoginD.RSAKeys = NULL;
-			return (0);
-		}
+		return 0;
 	}
 
 	Idx = BN_bn2bin(pInst->LoginD.RSAKeys->n, Modulus);
