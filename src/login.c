@@ -276,9 +276,9 @@ static int SendAuthentificationBlobLS(Skype_Inst *pInst, LSConnection *pConn, co
 		WriteObject(&Browser, ObjLang);
 
 		ObjPartnerId.Family = OBJ_FAMILY_TABLE;
-		ObjPlatForm.Id = OBJ_ID_PARTNERID;
-		memcpy(ObjPlatForm.Value.Table, (uchar *)&PartnerId, sizeof(ObjPlatForm.Value.Table));
-		WriteObject(&Browser, ObjPlatForm);
+		ObjPartnerId.Id = OBJ_ID_PARTNERID;
+		memcpy(ObjPartnerId.Value.Table, (uchar *)&PartnerId, sizeof(ObjPartnerId.Value.Table));
+		WriteObject(&Browser, ObjPartnerId);
 
 		ObjOauth.Family = OBJ_FAMILY_STRING;
 		ObjOauth.Id = OBJ_ID_OAUTH;
