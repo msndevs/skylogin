@@ -45,6 +45,8 @@ Memory_U Credentials_Write(Skype_Inst *pInst)
 	Crc = crc32(creds.Memory, Browser-creds.Memory, -1);
 	*Browser++ = *((uchar *)(&Crc) + 0);
 	*Browser++ = *((uchar *)(&Crc) + 1);
+#else
+	(void) Crc;
 #endif
 	return creds;
 }
@@ -74,6 +76,8 @@ int Credentials_Read(Skype_Inst *pInst, Memory_U creds, SResponse *LoginDatas)
 		DBGPRINT("Credentials: Bad CRC!");
 		return -2;
 	}
+#else
+	(void) Crc;
 #endif
 
 	Browser = creds.Memory;
