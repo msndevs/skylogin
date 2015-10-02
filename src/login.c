@@ -89,33 +89,12 @@ static int GenerateRSAKeys(Skype_Inst *pInst) {
 	return 1;
 }
 
-/* If Pass is NULL, User is assumed to be OAuth string and OAuth logon is performed */
-static int SendAuthentificationBlobLS(Skype_Inst *pInst, LSConnection *pConn, const char *User, const char *Pass)
-{
-	uchar				AuthBlob[0xFFFF] = {0};
-	uchar				SHAResult[32] = {0};
-	uchar				Modulus[MODULUS_SZ * 2] = {0};
-	uchar				ivec[AES_BLOCK_SIZE] = {0};
-	uchar				ecount_buf[AES_BLOCK_SIZE] = {0};
+static uchar *BuildAuthBlob(Skype_Inst *pInst, uchar *AuthBlob, const char *User, const char *Pass, uchar *Modulus, uchar *SessionKey, uchar **MarkObjLRet) {
 	uint				MiscDatas[0x05] = {0};
-	uchar				SessionKey[SK_SZ];
 	uchar				*Browser;
 	uchar				*MarkObjL;
-	uint				Idx, Size, Crc, BSize, ret = 0;
+	uint				Size;
 	HttpsPacketHeader	*HSHeader;
-	uchar				HSHeaderBuf[sizeof(HttpsPacketHeader)], RecvBuf[0x1000];
-	AES_KEY				AesKey;
-	RSA					*SkypeRSA;
-	SResponse			Response={0};
-	
-
-	if (!pInst->LoginD.RSAKeys && !GenerateRSAKeys(pInst))
-	{
-		return 0;
-	}
-
-	Idx = BN_bn2bin(pInst->LoginD.RSAKeys->n, Modulus);
-	Idx = BN_bn2bin(pInst->LoginD.RSAKeys->d, Modulus + Idx);
 
 	Browser = AuthBlob;
 
@@ -128,20 +107,6 @@ static int SendAuthentificationBlobLS(Skype_Inst *pInst, LSConnection *pConn, co
 	*Browser++ = 0x03;
 
 	WriteNbrObject(&Browser, OBJ_ID_2000, 0x2000);
-
-	SpecialSHA(pInst->SessionKey, SK_SZ, SHAResult, 32);
-	AES_set_encrypt_key(SHAResult, 256, &AesKey);
-
-	SkypeRSA = RSA_new();
-	BN_hex2bn(&(SkypeRSA->n), SkypeModulus1536[1]);
-	BN_hex2bn(&(SkypeRSA->e), "010001");
-	Idx = RSA_public_encrypt(SK_SZ, pInst->SessionKey, SessionKey, SkypeRSA, RSA_NO_PADDING);
-	RSA_free(SkypeRSA);
-	if (Idx < 0)
-	{
-		DBGPRINT("RSA_public_encrypt failed..\n\n");
-		return (0);
-	}
 
 	WriteBlobObject(&Browser, OBJ_ID_SK, SessionKey, SK_SZ);
 
@@ -201,6 +166,56 @@ static int SendAuthentificationBlobLS(Skype_Inst *pInst, LSConnection *pConn, co
 
 	Size = (uint)(Browser - MarkObjL);
 	HSHeader->ResponseLen = htons((u_short)(Size + 0x02));
+
+	*MarkObjLRet = MarkObjL;
+
+	return Browser;
+}
+
+/* If Pass is NULL, User is assumed to be OAuth string and OAuth logon is performed */
+static int SendAuthentificationBlobLS(Skype_Inst *pInst, LSConnection *pConn, const char *User, const char *Pass)
+{
+	uchar				AuthBlob[0xFFFF] = {0};
+	uchar				SHAResult[32] = {0};
+	uchar				Modulus[MODULUS_SZ * 2] = {0};
+	uchar				ivec[AES_BLOCK_SIZE] = {0};
+	uchar				ecount_buf[AES_BLOCK_SIZE] = {0};
+	uchar				SessionKey[SK_SZ];
+	uchar				*Browser;
+	uchar				*MarkObjL;
+	uint				Idx, Size, Crc, BSize, ret = 0;
+	uchar				HSHeaderBuf[sizeof(HttpsPacketHeader)], RecvBuf[0x1000];
+	HttpsPacketHeader	*HSHeader;
+	AES_KEY				AesKey;
+	RSA					*SkypeRSA;
+	SResponse			Response={0};
+	
+
+	if (!pInst->LoginD.RSAKeys && !GenerateRSAKeys(pInst))
+	{
+		return 0;
+	}
+
+	Idx = BN_bn2bin(pInst->LoginD.RSAKeys->n, Modulus);
+	Idx = BN_bn2bin(pInst->LoginD.RSAKeys->d, Modulus + Idx);
+
+	SpecialSHA(pInst->SessionKey, SK_SZ, SHAResult, 32);
+	AES_set_encrypt_key(SHAResult, 256, &AesKey);
+
+	SkypeRSA = RSA_new();
+	BN_hex2bn(&(SkypeRSA->n), SkypeModulus1536[1]);
+	BN_hex2bn(&(SkypeRSA->e), "010001");
+	Idx = RSA_public_encrypt(SK_SZ, pInst->SessionKey, SessionKey, SkypeRSA, RSA_NO_PADDING);
+	RSA_free(SkypeRSA);
+	if (Idx < 0)
+	{
+		DBGPRINT("RSA_public_encrypt failed..\n\n");
+		return (0);
+	}
+
+	Browser = BuildAuthBlob(pInst, AuthBlob, User, Pass, Modulus, SessionKey, &MarkObjL);
+
+	Size = (uint)(Browser - MarkObjL);
 
 	Idx = 0;
 	memset(ivec, 0, AES_BLOCK_SIZE);
