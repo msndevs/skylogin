@@ -146,9 +146,7 @@ static int SendAuthentificationBlobLS(Skype_Inst *pInst, LSConnection *pConn, co
 		*Browser++ = 0x04;
 
 		WriteNbrObject(&Browser, OBJ_ID_REQCODE, 0x1399);
-
 		WriteNbrObject(&Browser, OBJ_ID_ZBOOL2, 0x01);
-
 		WriteStringObject(&Browser, OBJ_ID_USERNAME, User, strlen(User));
 
 		MD5_Init(&Context);
@@ -163,11 +161,8 @@ static int SendAuthentificationBlobLS(Skype_Inst *pInst, LSConnection *pConn, co
 		*Browser++ = 0x06;
 
 		WriteBlobObject(&Browser, OBJ_ID_MODULUS, Modulus, MODULUS_SZ);
-
 		WriteTableObject(&Browser, OBJ_ID_PLATFORM, PlatFormSpecific());
-
 		WriteStringObject(&Browser, OBJ_ID_LANG, pInst->Language, sizeof(pInst->Language));
-
 		WriteIntListObject(&Browser, OBJ_ID_MISCD, MiscDatas, 0x05);
 	}
 	else
@@ -177,22 +172,16 @@ static int SendAuthentificationBlobLS(Skype_Inst *pInst, LSConnection *pConn, co
 		*Browser++ = 0x02;
 
 		WriteNbrObject(&Browser, OBJ_ID_REQCODE, 0x13a3);
-
 		WriteNbrObject(&Browser, OBJ_ID_ZBOOL2, 0x3d);
 
 		*Browser++ = RAW_PARAMS;
 		*Browser++ = 0x08;
 
 		WriteBlobObject(&Browser, OBJ_ID_MODULUS, Modulus, MODULUS_SZ);
-
 		WriteTableObject(&Browser, OBJ_ID_PLATFORM, PlatFormSpecific());
-
 		WriteIntListObject(&Browser, OBJ_ID_MISCD, MiscDatas, 0x05);
-
 		WriteStringObject(&Browser, OBJ_ID_LANG, pInst->Language, sizeof(pInst->Language));
-
 		WriteTableObject(&Browser, OBJ_ID_PARTNERID, 999);
-
 		WriteStringObject(&Browser, OBJ_ID_OAUTH, User, strlen(User));
 	}
 
