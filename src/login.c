@@ -59,6 +59,16 @@ static BOOL SendHandShake2LS(LSConnection *pConn, Host *CurLS)
 	return TRUE;
 }
 
+static void MakeLoginPasswordHash(Skype_Inst *pInst, const char *User, const char *Pass) {
+	MD5_CTX				Context;
+
+	MD5_Init(&Context);
+	MD5_Update(&Context, User, (ulong)strlen(User));
+	MD5_Update(&Context, CONCAT_SALT, (ulong)strlen(CONCAT_SALT));
+	MD5_Update(&Context, Pass, (ulong)strlen(Pass));
+	MD5_Final(pInst->LoginD.LoginHash, &Context);
+}
+
 /* If Pass is NULL, User is assumed to be OAuth string and OAuth logon is performed */
 static int SendAuthentificationBlobLS(Skype_Inst *pInst, LSConnection *pConn, const char *User, const char *Pass)
 {
@@ -75,7 +85,6 @@ static int SendAuthentificationBlobLS(Skype_Inst *pInst, LSConnection *pConn, co
 	HttpsPacketHeader	*HSHeader;
 	uchar				HSHeaderBuf[sizeof(HttpsPacketHeader)], RecvBuf[0x1000];
 	AES_KEY				AesKey;
-	MD5_CTX				Context;
 	RSA					*SkypeRSA;
 	SResponse			Response={0};
 	
@@ -149,12 +158,7 @@ static int SendAuthentificationBlobLS(Skype_Inst *pInst, LSConnection *pConn, co
 		WriteNbrObject(&Browser, OBJ_ID_ZBOOL2, 0x01);
 		WriteStringObject(&Browser, OBJ_ID_USERNAME, User, strlen(User));
 
-		MD5_Init(&Context);
-		MD5_Update(&Context, User, (ulong)strlen(User));
-		MD5_Update(&Context, CONCAT_SALT, (ulong)strlen(CONCAT_SALT));
-		MD5_Update(&Context, Pass, (ulong)strlen(Pass));
-		MD5_Final(pInst->LoginD.LoginHash, &Context);
-
+		MakeLoginPasswordHash(pInst, User, Pass);
 		WriteBlobObject(&Browser, OBJ_ID_USERPASS, pInst->LoginD.LoginHash, MD5_DIGEST_LENGTH);
 
 		*Browser++ = RAW_PARAMS;
