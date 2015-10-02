@@ -194,13 +194,13 @@ int		DecodeRawObjects(uchar **Buffer, uint Size, SResponse *Response, ObjectDesc
 			break;
 		case OBJ_FAMILY_OBJLIST:
 		{
-			uint	OldNbObj;
+			//uint	OldNbObj;
 			int		OldCurObjListId;
 
 			OldCurObjListId = CurObjListId;
 			CurObjListId = (int)Id;
 			CurObjListRank += 1;
-			OldNbObj = Response->NbObj;
+			//OldNbObj = Response->NbObj;
 			ManageObjects(Buffer, Size - (*Buffer - Mark), Response);
 			CurObjListId = OldCurObjListId;
 			//Suffix += Response->NbObj - OldNbObj;
