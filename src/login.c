@@ -137,6 +137,8 @@ static int SendAuthentificationBlobLS(Skype_Inst *pInst, LSConnection *pConn, co
 	HSHeader->ResponseLen = 0x00;
 	Browser += sizeof(HttpsPacketHeader);
 
+	FillMiscDatas(pInst, MiscDatas);
+
 	MarkObjL = Browser;
 	if (Pass)
 	{
@@ -166,12 +168,7 @@ static int SendAuthentificationBlobLS(Skype_Inst *pInst, LSConnection *pConn, co
 
 		WriteStringObject(&Browser, OBJ_ID_LANG, pInst->Language, sizeof(pInst->Language));
 
-		FillMiscDatas(pInst, MiscDatas);
 		WriteIntListObject(&Browser, OBJ_ID_MISCD, MiscDatas, 0x05);
-
-		WriteStringObject(&Browser, OBJ_ID_VERSION, VER_STR, strlen(VER_STR));
-
-		WriteNbrObject(&Browser, OBJ_ID_PUBADDR, pInst->PublicIP);
 	}
 	else
 	{
@@ -190,7 +187,6 @@ static int SendAuthentificationBlobLS(Skype_Inst *pInst, LSConnection *pConn, co
 
 		WriteTableObject(&Browser, OBJ_ID_PLATFORM, PlatFormSpecific());
 
-		FillMiscDatas(pInst, MiscDatas);
 		WriteIntListObject(&Browser, OBJ_ID_MISCD, MiscDatas, 0x05);
 
 		WriteStringObject(&Browser, OBJ_ID_LANG, pInst->Language, sizeof(pInst->Language));
@@ -198,11 +194,11 @@ static int SendAuthentificationBlobLS(Skype_Inst *pInst, LSConnection *pConn, co
 		WriteTableObject(&Browser, OBJ_ID_PARTNERID, 999);
 
 		WriteStringObject(&Browser, OBJ_ID_OAUTH, User, strlen(User));
-
-		WriteStringObject(&Browser, OBJ_ID_VERSION, VER_STR, strlen(VER_STR));
-
-		WriteNbrObject(&Browser, OBJ_ID_PUBADDR, pInst->PublicIP);
 	}
+
+	WriteStringObject(&Browser, OBJ_ID_VERSION, VER_STR, strlen(VER_STR));
+
+	WriteNbrObject(&Browser, OBJ_ID_PUBADDR, pInst->PublicIP);
 
 	Size = (uint)(Browser - MarkObjL);
 	HSHeader->ResponseLen = htons((u_short)(Size + 0x02));
