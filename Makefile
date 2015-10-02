@@ -12,6 +12,7 @@ PREFIX = $(DESTDIR)/usr/local
 BINDIR = $(PREFIX)/bin
 
 all: $(TARGET)
+	make -C test
 
 $(TARGET): $(OBJECTS)
 	$(CC) $(CFLAGS) -o $(TARGET) $(OBJECTS) $(LDFLAGS)
