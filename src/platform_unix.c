@@ -189,7 +189,8 @@ void FillMiscDatas(Skype_Inst *pInst, unsigned int *Datas)
 	FILE *fp;
 	SHA_CTX	Context;
 	uchar	Buffer[SHA_DIGEST_LENGTH];
-	char buffer[512], *p, d=0;
+	char buffer[512], *p;
+	int d=0;
 	unsigned char	mac_addr[6];
 	struct utsname name;
 
