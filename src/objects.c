@@ -52,11 +52,11 @@ void	WriteObject(uchar **Buffer, ObjectDesc Object)
 		WriteValue(Buffer, Object.Value.Nbr);
 		break;
 	case OBJ_FAMILY_TABLE:
-		IdxUp = 0;
-		IdxDown = sizeof(Object.Value.Table) - 1;
-		while (IdxDown >= 0)
-			(*Buffer)[IdxDown--] = Object.Value.Table[IdxUp++];
-		*Buffer += sizeof(Object.Value.Table);
+		for (IdxDown = sizeof(int64_t); IdxDown; IdxDown--)
+		{
+			*(*Buffer) = (Object.Value.Table >> (8 * (IdxDown - 1))) & 0xff;
+			*Buffer += 1;
+		}
 		break;
 	case OBJ_FAMILY_NETADDR:
 		*(unsigned int *)(*Buffer) = inet_addr(Object.Value.Addr.ip);
@@ -136,11 +136,11 @@ int		DecodeRawObjects(uchar **Buffer, uint Size, SResponse *Response, ObjectDesc
 			ReadValue(Buffer, &(Object->Value.Nbr));
 			break;
 		case OBJ_FAMILY_TABLE:
-			IdxUp = 0;
-			IdxDown = sizeof(Object->Value.Table) - 1;
-			while (IdxDown >= 0)
-				Object->Value.Table[IdxUp++] = (*Buffer)[IdxDown--];
-			*Buffer += sizeof(Object->Value.Table);
+			for (IdxDown = sizeof(int64_t); IdxDown; IdxDown--)
+			{
+				Object->Value.Table |= *(*Buffer) << (8 * IdxDown);
+				*Buffer += 1;
+			}
 			break;
 		case OBJ_FAMILY_NETADDR:
 #ifdef WIN32

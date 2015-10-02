@@ -200,7 +200,7 @@ static int SendAuthentificationBlobLS(Skype_Inst *pInst, LSConnection *pConn, co
 
 		ObjPlatForm.Family = OBJ_FAMILY_TABLE;
 		ObjPlatForm.Id = OBJ_ID_PLATFORM;
-		memcpy(ObjPlatForm.Value.Table, (uchar *)&PlatForm, sizeof(ObjPlatForm.Value.Table));
+		ObjPlatForm.Value.Table = PlatForm;
 		WriteObject(&Browser, ObjPlatForm);
 
 		ObjLang.Family = OBJ_FAMILY_STRING;
@@ -259,7 +259,7 @@ static int SendAuthentificationBlobLS(Skype_Inst *pInst, LSConnection *pConn, co
 
 		ObjPlatForm.Family = OBJ_FAMILY_TABLE;
 		ObjPlatForm.Id = OBJ_ID_PLATFORM;
-		memcpy(ObjPlatForm.Value.Table, (uchar *)&PlatForm, sizeof(ObjPlatForm.Value.Table));
+		ObjPlatForm.Value.Table = PlatForm;
 		WriteObject(&Browser, ObjPlatForm);
 
 		FillMiscDatas(pInst, MiscDatas);
@@ -277,7 +277,7 @@ static int SendAuthentificationBlobLS(Skype_Inst *pInst, LSConnection *pConn, co
 
 		ObjPartnerId.Family = OBJ_FAMILY_TABLE;
 		ObjPartnerId.Id = OBJ_ID_PARTNERID;
-		memcpy(ObjPartnerId.Value.Table, (uchar *)&PartnerId, sizeof(ObjPartnerId.Value.Table));
+		ObjPartnerId.Value.Table = PartnerId;
 		WriteObject(&Browser, ObjPartnerId);
 
 		ObjOauth.Family = OBJ_FAMILY_STRING;

@@ -13,7 +13,7 @@ typedef struct
 	union
 	{
 		Memory_U	Memory;
-		uchar	Table[8];		/* Actually DOUBLE int */
+		int64_t	Table;
 		uint	Nbr;
 		Host	Addr;
 	} Value;
