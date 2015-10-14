@@ -61,24 +61,24 @@ char *KeySelect(uint KeyIndex)
 	uint *pKeyDescTable = (uint*)KeyDescTable;
 	char *pRet;
 
-	if (pKeyDescTable[1] <= 0x1000)
+	if (pKeyDescTable[1] <= 4096)
 	{
-		while (pKeyDescTable[2]<0xFFFFFFFF)
+		while (pKeyDescTable[2] != -1)
 		{
 			switch (pKeyDescTable[1])
 			{
-			case 0x600:
+			case 1536:
 				pRet = SkypeModulus1536[pKeyDescTable[2]]; break;
-			case 0x800:
+			case 2048:
 				pRet = SkypeModulus2048[pKeyDescTable[2]]; break;
-			case 0x1000:
+			case 4096:
 				pRet = SkypeModulus4096[pKeyDescTable[2]]; break;
 			default:
 				return NULL;
 			}
 			if (pKeyDescTable[0] == KeyIndex) return pRet;
 			pKeyDescTable += 3;
-			if (pKeyDescTable[1]>0x1000) return pRet;
+			if (pKeyDescTable[1]>4096) return pRet;
 		}
 	}
 	return NULL;
