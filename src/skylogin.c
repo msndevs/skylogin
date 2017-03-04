@@ -126,7 +126,7 @@ EXPORT int SkyLogin_PerformLoginOAuth(SkyLogin pPInst, const char *OAuth)
 			SResponse LoginDatas;
 
 			// We don't know user name, so read it from Credentials
-			if (Credentials_Parse(creds, &LoginDatas) == 0)
+			if (Credentials_Parse(pInst->LoginD.SignedCredentials, &LoginDatas) == 0)
 			{
 				uint Idx;
 
